@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang='ko'><head>
+<meta charset='UTF-8'/>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'/>
+<link rel='stylesheet' href='styles.css'/>
+<title>Git & GitHub 강의안 (Windows CMD 기준)</title>
+</head><body>
+<header class='header'><div class='container'>
+<h1 class='title'>Git & GitHub 강의안 (Windows CMD 기준)</h1>
+<p class='subtitle'>styles.css 기준으로 다시 구성한 문서이다. 목차/구조를 복원하고, 실습 명령어는 복사/붙여넣기 가능한 형태로 정리하였다.</p>
+  <nav class='toc' aria-label='목차'>
+      <a href='#sec-0-이-강의안-기준-중요'>0. 이 강의안 기준 (중요)</a>
+      <a href='#sec-1-Git과-GitHub-한-줄-요약'>1. Git과 GitHub 한 줄 요약</a>
+      <a href='#sec-2-왜-Git을-써야-할까'>2. 왜 Git을 써야 할까?</a>
+      <a href='#sec2-1'>└ 2-1. Git 설치 (Windows)</a>
+      <a href='#sec-3-Git-핵심-개념-이것만-알면-됨'>3. Git 핵심 개념 (이것만 알면 됨)</a>
+      <a href='#sec-3-1-Git-최초-사용자-정보-설정'>3-1. Git 최초 사용자 정보 설정</a>
+      <a href='#sec-4-Git-기본-흐름-가장-중요'>4. Git 기본 흐름 (가장 중요)</a>
+      <a href='#sec-5-Git-최신-기본-명령어-최신-방식만'>5. Git 최신 기본 명령어 (최신 방식만)</a>
+      <a href='#sec-6-GitHub는-왜-필요할까'>6. GitHub는 왜 필요할까?</a>
+      <a href='#sec-7-GitHub를-SSH로-연결하기-Windows-CMDPowerShell-기준'>7. GitHub를 SSH로 연결하기</a>
+      <a href='#sec-8-GitHub-저장소를-SSH로-시작하기-처음부터-SSH'>8. GitHub 저장소를 SSH로 시작하기</a>
+      <a href='#sec-9-100MB-이상-파일-때문에-push-실패할-때-Windows'>9. 100MB 이상 파일 문제</a>
+      <a href='#sec-10-git-reset-vs-git-revert-차이-초보자-필수'>10. git reset vs git revert</a>
+      <a href='#sec-11-자주-하는-실수-Windows-기준'>11. 자주 하는 실수</a>
+      <a href='#sec-12-실무-치트시트'>12. 실무 치트시트</a>
+    </nav></div></header>
+<main class='container'>
+<section class='section' id='sec-0-이-강의안-기준-중요'>
+<h2>0. 이 강의안 기준 (중요)</h2>
+<div class='card'>
+<ul>
+<li><strong>OS</strong>: Windows 10/11</li>
+<li><strong>터미널</strong>: <strong>Windows CMD 또는 PowerShell</strong> (Git Bash 기준 설명은 제외)</li>
+<li><strong>Git</strong>: Git 최신 버전(2.30+) 사용</li>
+<li><strong>브랜치 명령어</strong>: <code>git switch</code>만 사용 (최신 방식만)</li>
+<li><strong>SSH</strong>: GitHub 연결은 <strong>처음부터 SSH</strong>로 진행</li>
+</ul>
+</div></section>
+<section class='section' id='sec-1-Git과-GitHub-한-줄-요약'>
+<h2>1. Git과 GitHub 한 줄 요약</h2>
+<div class='card'>
+<ul>
+<li><strong>Git</strong>: 내 컴퓨터에서 파일 변경 이력을 관리하는 도구(버전 관리)</li>
+<li><strong>GitHub</strong>: Git 저장소를 인터넷에 올려 <strong>백업·공유·협업</strong>하는 서비스</li>
+</ul>
+<blockquote>
+<p>비유</p>
+<ul>
+<li>Git = “되돌리기 + 버전관리”</li>
+<li>GitHub = “클라우드 협업 저장소”</li>
+</ul>
+</blockquote>
+<p>비유</p>
+<ul>
+<li>Git = “되돌리기 + 버전관리”</li>
+<li>GitHub = “클라우드 협업 저장소”</li>
+</ul>
+</div></section>
+<section class='section' id='sec-2-왜-Git을-써야-할까'>
+<h2>2. 왜 Git을 써야 할까?</h2>
+<div class='card'>
+<p>Git이 없으면:</p>
+<ul>
+<li>final.zip → final_final.zip → final_final_진짜최종.zip …</li>
+</ul>
+<p>Git을 쓰면:</p>
+<ul>
+<li>언제든 과거 상태로 되돌릴 수 있음</li>
+<li>누가/언제/무엇을 바꿨는지 기록이 남음</li>
+<li>실수해도 복구 가능</li>
+</ul>
+<h3 id='sec2-1'>2-1. Git 설치 (Windows)</h3>
+<p>Git을 실제로 쓰려면 먼저 Windows에 Git for Windows를 설치해야 한다.</p>
+<ul class="list">
+<li>Git for Windows 최신 버전을 설치한다: <a href="https://git-scm.com" target="_blank" rel="noopener">https://git-scm.com</a></li>
+<li>설치 옵션은 기본값을 그대로 사용해도 된다.</li>
+<li>설치 후 CMD 또는 PowerShell을 <strong>새로 열어</strong> 아래 명령이 동작하는지 확인한다.</li>
+</ul>
+<pre><code>git --version
+ssh -V
+ssh-keygen -h</code></pre>
+<div class='note'><strong>중요</strong> 설치 직후 기존에 열려 있던 터미널에서는 <code>git</code>이 인식되지 않을 수 있다. CMD/PowerShell을 닫고 다시 열어 확인하는 것이 안전하다.</div>
+</div></section>
+<section class='section' id='sec-3-Git-핵심-개념-이것만-알면-됨'>
+<h2>3. Git 핵심 개념 (이것만 알면 됨)</h2>
+<div class='card'>
+<ul>
+<li><strong>Repository(저장소)</strong>: 프로젝트 폴더 + 변경 이력</li>
+<li><strong>Commit(커밋)</strong>: 변경 상태를 “사진 찍듯이” 저장한 기록</li>
+<li><strong>Branch(브랜치)</strong>: 작업용 분기(기능 개발/실험용)</li>
+</ul>
+<p>기본 브랜치 이름: <code>main</code></p>
+</div></section>
+
+
+<section class='section' id='sec-3-1-Git-최초-사용자-정보-설정'>
+  <h2>3-1. Git 최초 사용자 정보 설정 (반드시 1회 필요)</h2>
+  <div class='card'>
+    <p>
+      Git을 처음 설치한 뒤 <code>git commit</code>을 실행하면
+      아래와 같은 오류가 발생할 수 있다.
+    </p>
+
+    <pre><code>Author identity unknown
+fatal: unable to auto-detect email address</code></pre>
+
+    <p>
+      Git은 모든 커밋에 <strong>작성자 이름(name)</strong>과
+      <strong>이메일(email)</strong> 정보가 반드시 필요하다.
+      이는 오류가 아니라 <strong>정상적인 초기 설정 단계</strong>이다.
+    </p>
+
+    <h3>전역 설정 (권장, 최초 1회)</h3>
+    <p>아래 설정은 한 번만 하면 이후 모든 저장소에서 공통으로 적용된다.</p>
+
+    <pre><code>git config --global user.name "홍길동"
+git config --global user.email "hong@example.com"</code></pre>
+
+    <div class='note'>
+      <strong>참고</strong>
+      이메일은 GitHub 계정 이메일과 같을 필요는 없지만,
+      같을 경우 GitHub 커밋 기록(잔디)이 정상적으로 연결된다.
+    </div>
+
+    <h3>설정 확인</h3>
+    <pre><code>git config --global --list</code></pre>
+
+    <h3>저장소별 설정 (선택)</h3>
+    <p>
+      회사 프로젝트나 실습용 저장소 등,
+      특정 저장소에서만 다른 정보를 쓰고 싶을 때 사용한다.
+    </p>
+
+    <pre><code>git config user.name "Lab User"
+git config user.email "lab@example.com"</code></pre>
+
+    <div class='note'>
+      <strong>정리</strong>
+      Git은 처음 사용할 때 반드시 사용자 정보 설정이 필요하며,
+      이 설정은 PC당 1회만 수행하면 된다.
+    </div>
+  </div>
+</section>
+
+
+<section class='section' id='sec-4-Git-기본-흐름-가장-중요'>
+<h2>4. Git 기본 흐름 (가장 중요)</h2>
+<div class='card'>
+<pre><code>파일 수정
+↓
+git add .
+↓
+git commit -m "메시지"
+↓
+git push (GitHub에 올릴 때)</code></pre>
+<ul>
+<li><code>git add</code> : “이 변경을 커밋에 포함할게”</li>
+<li><code>git commit</code> : “이 상태를 기록으로 남길게”</li>
+</ul>
+</div></section>
+<section class='section' id='sec-5-Git-최신-기본-명령어-최신-방식만'>
+<h2>5. Git 최신 기본 명령어 (최신 방식만)</h2>
+<div class='card'>
+<p>아래 명령어는 <strong>Windows CMD/PowerShell</strong>에서 그대로 사용합니다.</p>
+<pre><code>git --version
+git status</code></pre>
+<h3>5-1. 가장 많이 쓰는 명령어 세트</h3>
+<pre><code>git init
+git status
+git add.
+git commit -m "메시지"
+git log</code></pre>
+<h3>5-2. 브랜치 작업은 <code>git switch</code>만 사용 (최신)</h3>
+<ul>
+<li>브랜치 만들기 + 이동:</li>
+</ul>
+<pre><code>git switch -c feature - login</code></pre>
+<ul>
+<li>브랜치 이동:</li>
+</ul>
+<pre><code>git switch main</code></pre>
+<h3>5-3. 최신 역할 분담 표 (이 강의안의 유일한 기준)</h3>
+<table>
+<thead>
+<tr>
+<th>작업</th>
+<th>명령어</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>브랜치 이동</td>
+<td><code>git switch</code></td>
+</tr>
+<tr>
+<td>브랜치 생성+이동</td>
+<td><code>git switch -c</code></td>
+</tr>
+<tr>
+<td>파일 되돌리기</td>
+<td><code>git restore</code></td>
+</tr>
+<tr>
+<td>커밋 되돌리기</td>
+<td><code>git reset</code> / <code>git revert</code></td>
+</tr>
+</tbody>
+</table>
+</div></section>
+<section class='section' id='sec-6-GitHub는-왜-필요할까'>
+<h2>6. GitHub는 왜 필요할까?</h2>
+<div class='card'>
+<ul>
+<li>내 코드 <strong>백업</strong></li>
+<li>여러 사람이 함께 하는 <strong>협업</strong></li>
+<li>포트폴리오 공개/배포</li>
+</ul>
+<p>Git은 로컬에서도 되지만, GitHub는 <strong>원격(온라인) 저장소</strong>입니다.</p>
+</div></section>
+<section class='section' id='sec-7-GitHub를-SSH로-연결하기-Windows-CMDPowerShell-기준'>
+<h2>7. GitHub를 SSH로 연결하기 (Windows CMD/PowerShell 기준)</h2>
+<div class='card'>
+<h3>7-1. 준비물</h3>
+<ul class="list">
+<li>Git 설치 및 설치 확인(2-1 절)이 완료된 상태이다.</li>
+<li>Windows CMD 또는 PowerShell을 사용할 수 있어야 한다.</li>
+<li>GitHub 계정이 있어야 한다.</li>
+</ul>
+<div class='note'><strong>정리</strong> 이 절에서는 “SSH로 GitHub에 연결하는 방법”만 다룬다.</div>
+<h3>7-2. SSH 키 생성 (ed25519만 사용)</h3>
+<p>CMD/PowerShell에서 실행:</p>
+<pre><code>ssh-keygen -t ed25519 -C "your_email@example.com"</code></pre>
+<h4><code>ed25519</code> 의미 (초보자용)</h4>
+<ul>
+<li><code>-t</code> = 키 타입(암호화 방식)</li>
+<li><code>ed25519</code> = 최신 표준(빠르고 안전하고 키가 짧음)<br/>
+→ <strong>이 강의안에서는 ed25519만 사용합니다.</strong></li>
+</ul>
+<h3>7-3. 공개키 확인 (Windows CMD/PowerShell)</h3>
+<p>아래 명령으로 공개키를 출력해서 <strong>전체를 복사</strong>합니다.</p>
+<pre><code>type %USERPROFILE%\.
+ssh\id_ed25519.pub</code></pre>
+<h3>7-4. GitHub에 SSH 키 등록</h3>
+<ol>
+<li>GitHub → <strong>Settings</strong></li>
+<li><strong>SSH and GPG keys</strong></li>
+<li><strong>New SSH key</strong></li>
+<li>Title: 내 PC 이름</li>
+<li>Key: 방금 복사한 공개키 붙여넣기</li>
+</ol>
+<h3>7-5. SSH 연결 테스트 (Windows)</h3>
+<p>처음 연결이면 <code>yes</code> 입력이 나올 수 있습니다.</p>
+<pre><code>ssh -T git@github.com</code></pre>
+</div></section>
+<section class='section' id='sec-8-GitHub-저장소를-SSH로-시작하기-처음부터-SSH'>
+<h2>8. GitHub 저장소를 SSH로 시작하기 (처음부터 SSH)</h2>
+<div class='card'>
+<h3>8-1. GitHub에서 Repository 생성</h3>
+<ul>
+<li>이름 입력 → Public/Private 선택 → Create</li>
+</ul>
+<h3>8-2. SSH 주소로 clone (CMD/PowerShell)</h3>
+<p>GitHub 저장소 페이지에서 <strong>Code → SSH</strong> 주소를 복사해 사용합니다.</p>
+<pre><code>git clone
+git@github.com:username/repo.
+git
+cd repo</code></pre>
+<h3>8-3. 작업 후 업로드</h3>
+<pre><code>git add.
+git commit -m "첫 커밋"
+git push</code></pre>
+</div></section>
+<section class='section' id='sec-9-100MB-이상-파일-때문에-push-실패할-때-Windows'>
+<h2>9. 100MB 이상 파일 때문에 push 실패할 때 (Windows)</h2>
+<div class='card'>
+<p>GitHub는 <strong>단일 파일 100MB 초과</strong> 업로드를 제한합니다.</p>
+<h3>9-1. 가장 좋은 해결: <code>.gitignore</code>에 미리 제외</h3>
+<p>예시:</p>
+<pre><code>gitignore
+# 대용량/바이너리
+*.zip
+*.tar
+*.tar.gz
+*.mp4
+*.bin
+*.pt
+*.ckpt
+*.h5
+# 데이터/모델 폴더
+data/
+logs/
+models/</code></pre>
+<h3>9-2. 이미 커밋에 포함해버렸다면 (핵심)</h3>
+<blockquote>
+<p><code>.gitignore</code>만 추가해도 <strong>이미 커밋된 파일은 계속 추적</strong>됩니다.<br/>
+따라서 “추적에서 제거”가 필요합니다.</p>
+</blockquote>
+<p><code>.gitignore</code>만 추가해도 <strong>이미 커밋된 파일은 계속 추적</strong>됩니다.<br/>
+따라서 “추적에서 제거”가 필요합니다.</p>
+<ol>
+<li>Git 추적에서 제거:</li>
+</ol>
+<pre><code>git rm --cached 큰파일이름
+git commit -m "Remove large file"
+git push</code></pre>
+<h3>9-3. 대용량 파일이 꼭 필요하면: Git LFS</h3>
+<p>(조직/프로젝트 정책에 따라 사용)</p>
+<pre><code>git lfs install
+git lfs track "*.pt"
+git add.
+.gitattributes
+git commit -m "Track large files with LFS"
+git push</code></pre>
+</div></section>
+<section class='section' id='sec-10-git-reset-vs-git-revert-차이-초보자-필수'>
+<h2>10. git reset vs git revert 차이 (초보자 필수)</h2>
+<div class='card'>
+<h3>한 줄 결론</h3>
+<ul>
+<li><strong>reset</strong>: 내 로컬 히스토리를 되감음(기록이 바뀜) → <strong>push 전</strong>에만 사용 권장</li>
+<li><strong>revert</strong>: 되돌리는 내용을 담은 <strong>새 커밋</strong>을 추가(기록 보존) → <strong>push 후/협업</strong>에서 안전</li>
+</ul>
+<h3>10-1. reset (push 전 로컬 정리용)</h3>
+<pre><code>git reset --soft HEAD~1
+git reset --hard HEAD~1</code></pre>
+<h3>10-2. revert (push 후/협업 브랜치에서 안전)</h3>
+<pre><code>git revert 커밋해시</code></pre>
+</div></section>
+<section class='section' id='sec-11-자주-하는-실수-Windows-기준'>
+<h2>11. 자주 하는 실수 (Windows 기준)</h2>
+<div class='card'>
+<ul>
+<li>add 안 하고 commit</li>
+<li>커밋 메시지 없이 작업</li>
+<li>pull 안 하고 push</li>
+<li>대용량 파일을 그대로 커밋</li>
+</ul>
+<p>✅ 해결 습관: <strong>작게 자주 commit</strong>, push 전에 <code>git status</code></p>
+</div></section>
+<section class='section' id='sec-12-실무-치트시트'>
+<h2>12. 실무 치트시트</h2>
+<div class='card'>
+<pre><code>git status
+git add.
+git commit -m "작업 내용"
+git pull
+git push # 되돌리기(상황에 따라 선택)
+git reset --soft HEAD~1
+git revert 커밋해시</code></pre>
+</div></section>
+<footer class='footer'><div><strong>안내</strong> 원본 변환 HTML의 내장 스타일/깨진 코드블록을 제거하고 styles.css 기준으로 재작성하였다.</div></footer>
+</main></body></html>

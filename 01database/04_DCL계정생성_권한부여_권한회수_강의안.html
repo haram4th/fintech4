@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DCL(Data Control Language) 강의안</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<header class="header">
+  <div class="container">
+    <h1 class="title">DCL(Data Control Language) 강의안</h1>
+    <p class="subtitle">
+      데이터베이스 사용자(User)와 권한(Privilege)을 관리하는 SQL이다.
+      “누가, 어디서, 무엇을, 어디까지 할 수 있는가”를 통제하는 언어이다.
+    </p>
+
+    <nav class="toc">
+      <a href="#dcl-what">DCL이란</a>
+      <a href="#dcl-why">DCL 필요성</a>
+      <a href="#dcl-user">사용자(User)</a>
+      <a href="#dcl-host">Host 개념</a>
+      <a href="#dcl-priv">권한(Privilege)</a>
+      <a href="#dcl-grant">GRANT</a>
+      <a href="#dcl-revoke">REVOKE</a>
+      <a href="#dcl-remote">원격 사용자 실습</a>
+      <a href="#dcl-role">ROLE</a>
+      <a href="#dcl-summary">정리</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+<!-- =========================
+     DCL 개요
+========================== -->
+<section id="dcl-what" class="section">
+  <h2>1. DCL(Data Control Language)란</h2>
+  <div class="card">
+    <p>
+      DCL(Data Control Language)은 데이터베이스의 <b>보안과 접근 제어</b>를 담당하는 SQL이다.
+      데이터 자체를 조작하지 않고, <b>사용자와 권한</b>을 관리한다.
+    </p>
+
+    <div class="note">
+      <strong>핵심</strong> DCL은 “데이터를 누가, 어디서, 어떤 권한으로 접근할 수 있는가”를 정의한다.
+    </div>
+  </div>
+</section>
+
+<section id="dcl-why" class="section">
+  <h2>2. DCL이 필요한 이유</h2>
+  <div class="card">
+    <ul class="list">
+      <li>모든 사용자가 모든 데이터를 수정하면 위험하다.</li>
+      <li>조회 전용 사용자와 수정 가능한 사용자를 구분해야 한다.</li>
+      <li>외부(원격) 접근을 제한하지 않으면 보안 사고로 이어질 수 있다.</li>
+    </ul>
+
+    <div class="note">
+      <strong>실무 예</strong> 서버(DB)는 회사 내부에 있고, 개발자는 외부 PC에서 접속한다.
+    </div>
+  </div>
+</section>
+
+<!-- =========================
+     USER
+========================== -->
+<section id="dcl-user" class="section">
+  <h2>3. 사용자(User)란</h2>
+  <div class="card">
+    <p>
+      MySQL에서 사용자는 <b>계정(Account)</b>이다.
+      사용자는 반드시 <b>아이디 + 접속 위치(host)</b>로 정의된다.
+    </p>
+
+    <pre><code>'사용자명'@'호스트'</code></pre>
+
+    <div class="note">
+      <strong>중요</strong> 같은 사용자명이라도 host가 다르면 <b>완전히 다른 사용자</b>이다.
+    </div>
+  </div>
+</section>
+
+<!-- =========================
+     HOST
+========================== -->
+<section id="dcl-host" class="section">
+  <h2>4. Host(접속 위치) 개념</h2>
+  <div class="card">
+    <p>
+      Host는 사용자가 <b>어디에서 접속하는지</b>를 의미한다.
+      MySQL은 보안을 위해 접속 위치까지 함께 검사한다.
+    </p>
+
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Host</th>
+          <th>의미</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>localhost</td><td>DB 서버 자신에서 접속</td></tr>
+        <tr><td>%</td><td>모든 외부 IP 허용</td></tr>
+        <tr><td>192.168.0.%</td><td>특정 대역만 허용</td></tr>
+        <tr><td>특정 IP</td><td>해당 IP에서만 접속 가능</td></tr>
+      </tbody>
+    </table>
+
+    <div class="note">
+      <strong>시험 포인트</strong> 'user'@'localhost' 와 'user'@'%' 는 서로 다른 사용자이다.
+    </div>
+  </div>
+</section>
+
+<!-- =========================
+     PRIVILEGE
+========================== -->
+<section id="dcl-priv" class="section">
+  <h2>5. 권한(Privilege)이란</h2>
+  <div class="card">
+    <p>
+      권한은 사용자가 DB에서 수행할 수 있는 <b>작업의 종류</b>이다.
+    </p>
+
+    <table class="table">
+      <thead>
+        <tr>
+          <th>권한</th>
+          <th>의미</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>SELECT</td><td>조회</td></tr>
+        <tr><td>INSERT</td><td>삽입</td></tr>
+        <tr><td>UPDATE</td><td>수정</td></tr>
+        <tr><td>DELETE</td><td>삭제</td></tr>
+        <tr><td>ALL</td><td>모든 권한</td></tr>
+      </tbody>
+    </table>
+
+    <div class="note">
+      <strong>원칙</strong> 권한은 반드시 필요한 것만 부여한다(최소 권한 원칙).
+    </div>
+  </div>
+</section>
+
+<!-- =========================
+     GRANT
+========================== -->
+<section id="dcl-grant" class="section">
+  <h2>6. GRANT – 권한 부여</h2>
+  <div class="card">
+    <h3>기본 문법</h3>
+    <pre><code>GRANT 권한
+ON 데이터베이스.테이블
+TO '사용자'@'호스트';</code></pre>
+
+    <h3>로컬 사용자 예시</h3>
+    <pre><code>GRANT SELECT
+ON academy.*
+TO 'local_user'@'localhost';</code></pre>
+
+    <h3>원격 사용자 예시</h3>
+    <pre><code>GRANT SELECT, INSERT
+ON academy.*
+TO 'remote_user'@'%';</code></pre>
+
+    <div class="note">
+      <strong>해석</strong> remote_user는 모든 IP에서 academy DB에 접속해 조회·삽입이 가능하다.
+    </div>
+  </div>
+</section>
+
+<!-- =========================
+     REVOKE
+========================== -->
+<section id="dcl-revoke" class="section">
+  <h2>7. REVOKE – 권한 회수</h2>
+  <div class="card">
+    <h3>문법</h3>
+    <pre><code>REVOKE 권한
+ON 데이터베이스.테이블
+FROM '사용자'@'호스트';</code></pre>
+
+    <h3>원격 사용자 권한 회수 예시</h3>
+    <pre><code>REVOKE INSERT
+ON academy.*
+FROM 'remote_user'@'%';</code></pre>
+
+    <div class="note">
+      <strong>주의</strong> REVOKE는 데이터가 아니라 “권한”만 회수한다.
+    </div>
+  </div>
+</section>
+
+<!-- =========================
+     REMOTE PRACTICE
+========================== -->
+<section id="dcl-remote" class="section">
+  <h2>8. 원격 사용자 전체 실습 흐름</h2>
+  <div class="card">
+    <ol class="list">
+      <li>원격 사용자 생성</li>
+      <li>권한 부여(GRANT)</li>
+      <li>접속 테스트</li>
+      <li>필요 없는 권한 회수(REVOKE)</li>
+    </ol>
+
+    <pre><code>-- 1) 원격 사용자 생성
+CREATE USER 'remote_user'@'%'
+IDENTIFIED BY '1234';
+
+-- 2) 권한 부여
+GRANT SELECT, INSERT
+ON academy.*
+TO 'remote_user'@'%';
+
+-- 3) 권한 회수
+REVOKE INSERT
+ON academy.*
+FROM 'remote_user'@'%';</code></pre>
+
+    <div class="note">
+      <strong>실무 팁</strong> '%' 대신 특정 IP 대역을 쓰는 것이 훨씬 안전하다.
+    </div>
+  </div>
+</section>
+
+<!-- =========================
+     ROLE
+========================== -->
+<section id="dcl-role" class="section">
+  <h2>9. ROLE(역할)이란</h2>
+  <div class="card">
+    <p>
+      ROLE(역할)은 <b>여러 권한(Privilege)을 하나로 묶어 놓은 집합</b>이다.
+      사용자에게 권한을 직접 하나씩 주는 대신, ROLE을 통해 일괄 관리할 수 있다.
+    </p>
+
+    <div class="note">
+      <strong>핵심</strong> ROLE은 “권한 묶음 세트”이며, 권한 관리의 자동화 도구이다.
+    </div>
+
+    <!-- 왜 ROLE이 필요한가 -->
+    <h3>1) ROLE이 필요한 이유</h3>
+    <ul class="list">
+      <li>사용자가 많아질수록 GRANT/REVOKE를 직접 관리하기 어렵다.</li>
+      <li>같은 권한을 여러 사용자에게 반복 부여하면 관리 실수가 발생한다.</li>
+      <li>부서/직무 단위로 권한을 통일할 필요가 있다.</li>
+    </ul>
+
+    <div class="note">
+      <strong>예시</strong> 개발자 10명에게 SELECT 권한을 주는 대신, developer_role 하나만 관리한다.
+    </div>
+
+    <!-- ROLE 생성 -->
+    <h3>2) ROLE 생성</h3>
+    <pre><code>CREATE ROLE developer_role;
+CREATE ROLE readonly_role;</code></pre>
+
+    <p>
+      ROLE은 사용자와 달리 로그인 계정이 아니며,
+      단독으로는 아무 권한도 가지지 않는다.
+    </p>
+
+    <!-- ROLE에 권한 부여 -->
+    <h3>3) ROLE에 권한 부여</h3>
+    <pre><code>GRANT SELECT, INSERT, UPDATE
+ON academy.*
+TO developer_role;
+
+GRANT SELECT
+ON academy.*
+TO readonly_role;</code></pre>
+
+    <div class="note">
+      <strong>중요</strong> 권한은 사용자에게 주는 것이 아니라, ROLE에 먼저 부여한다.
+    </div>
+
+    <!-- 사용자에게 ROLE 부여 -->
+    <h3>4) 사용자에게 ROLE 부여</h3>
+    <pre><code>GRANT developer_role
+TO 'dev_user'@'%';
+
+GRANT readonly_role
+TO 'report_user'@'%';</code></pre>
+
+    <p>
+      이 시점에서 사용자는 ROLE을 <b>보유</b>하지만,
+      아직 ROLE이 <b>활성화</b>된 것은 아니다(MySQL 8.0 기준).
+    </p>
+
+    <!-- ROLE 활성화 -->
+    <h3>5) ROLE 활성화(SET ROLE)</h3>
+    <pre><code>SET ROLE developer_role;</code></pre>
+
+    <p>
+      ROLE은 세션 단위로 활성화되며,
+      활성화하지 않으면 권한이 적용되지 않을 수 있다.
+    </p>
+
+    <div class="note">
+      <strong>실무 팁</strong> 매번 SET ROLE을 하지 않도록 기본 ROLE을 설정할 수 있다.
+    </div>
+
+    <!-- 기본 ROLE 설정 -->
+    <h3>6) 기본 ROLE 설정</h3>
+    <pre><code>SET DEFAULT ROLE developer_role
+TO 'dev_user'@'%';</code></pre>
+
+    <p>
+      이제 해당 사용자는 로그인 시 자동으로 ROLE이 활성화된다.
+    </p>
+
+    <!-- ROLE 회수 -->
+    <h3>7) ROLE 회수</h3>
+    <pre><code>REVOKE developer_role
+FROM 'dev_user'@'%';</code></pre>
+
+    <p>
+      ROLE을 회수하면 ROLE에 포함된 모든 권한이 한 번에 제거된다.
+    </p>
+
+    <!-- ROLE 삭제 -->
+    <h3>8) ROLE 삭제</h3>
+    <pre><code>DROP ROLE readonly_role;</code></pre>
+
+    <div class="note">
+      <strong>주의</strong> ROLE을 삭제하면 해당 ROLE을 사용하던 모든 사용자에게서 권한이 사라진다.
+    </div>
+
+    <!-- 실무 패턴 -->
+    <h3>9) 실무에서 자주 쓰는 ROLE 설계 패턴</h3>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>ROLE</th>
+          <th>권한 구성</th>
+          <th>대상</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>readonly_role</td>
+          <td>SELECT</td>
+          <td>조회 전용 사용자</td>
+        </tr>
+        <tr>
+          <td>developer_role</td>
+          <td>SELECT, INSERT, UPDATE</td>
+          <td>개발자</td>
+        </tr>
+        <tr>
+          <td>admin_role</td>
+          <td>ALL PRIVILEGES</td>
+          <td>DB 관리자</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- 시험용 문장 -->
+    <div class="note">
+      <strong>시험 대비 문장</strong><br/>
+      ROLE은 여러 권한을 하나로 묶어 사용자에게 일괄 부여할 수 있는 권한 관리 단위이다.
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="foot">
+      구성: DCL 개념 → 사용자/Host → 권한 → GRANT/REVOKE → 원격 사용자 실습 → ROLE이다.
+    </div>
+  </div>
+</footer>
+
+</main>
+</body>
+</html>

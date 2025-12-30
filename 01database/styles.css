@@ -1,0 +1,154 @@
+:root{
+  --bg: #f6f7fb;
+  --card: #ffffff;
+  --text: #1f2937;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --accent: #2563eb;
+  --accent-soft: #eff6ff;
+  --code-bg: #0b1220;
+  --code-text: #e5e7eb;
+}
+
+*{ box-sizing: border-box; }
+
+body{
+  margin: 0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Noto Sans KR, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.65;
+}
+
+.container{
+  width: min(1000px, calc(100% - 32px));
+  margin: 0 auto;
+}
+
+.header{
+  background: linear-gradient(180deg, var(--accent-soft), var(--bg));
+  border-bottom: 1px solid var(--border);
+  padding: 24px 0 18px;
+}
+
+.title{
+  margin: 0 0 6px;
+  font-size: 28px;
+  letter-spacing: -0.02em;
+}
+
+.subtitle{
+  margin: 0 0 14px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.toc{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.toc a{
+  display: inline-block;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: 10px;
+  color: var(--text);
+  text-decoration: none;
+  font-size: 13px;
+}
+
+.toc a:hover{
+  border-color: #c7d2fe;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.04);
+}
+
+.section{
+  padding: 18px 0;
+}
+
+.section h2{
+  margin: 0 0 10px;
+  font-size: 22px;
+  letter-spacing: -0.01em;
+}
+
+.section h3{
+  margin: 16px 0 8px;
+  font-size: 16px;
+}
+
+.card{
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px 16px;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.03);
+}
+
+.list{
+  margin: 8px 0 0;
+  padding-left: 18px;
+}
+
+.table{
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.table th, .table td{
+  border: 1px solid var(--border);
+  padding: 10px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.table thead th{
+  background: #f9fafb;
+}
+
+pre{
+  margin: 10px 0;
+  padding: 12px;
+  border-radius: 12px;
+  overflow: auto;
+  background: var(--code-bg);
+  color: var(--code-text);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+code{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 0.95em;
+}
+
+.note{
+  margin-top: 12px;
+  padding: 12px;
+  background: #fbfdff;
+  border: 1px dashed #c7d2fe;
+  border-radius: 12px;
+}
+
+.note strong{
+  color: #1d4ed8;
+}
+
+.foot{
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.footer{
+  margin-top: 10px;
+  padding: 18px 0 26px;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 13px;
+}

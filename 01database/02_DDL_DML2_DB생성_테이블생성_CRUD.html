@@ -1,0 +1,860 @@
+<!-- 파일명 예시: ddl_dml_crud_lecture.html -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MySQL DDL + DML (INSERT/UPDATE/DELETE) 강의안</title>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+
+  <header class="header">
+    <div class="container">
+      <h1 class="title">MySQL DDL + DML (INSERT/UPDATE/DELETE) 강의안</h1>
+      <p class="subtitle">
+        DDL(정의)로 구조를 만들고, DML(조작)로 데이터를 입력/수정/삭제하는 흐름을 학습한다.
+        INSERT/UPDATE/DELETE 실수 방지 절차와 트랜잭션까지 포함한다.
+      </p>
+
+      <nav class="toc">
+        <a href="#goals">학습 목표</a>
+        <a href="#overview">큰 그림</a>
+        <a href="#schema">Database/Schema</a>
+        <a href="#table-concept">테이블 개념</a>
+        <a href="#ddl">DDL 개요</a>
+        <a href="#db">DB 생성/선택/삭제</a>
+        <a href="#create-table">테이블 생성</a>
+        <a href="#types">데이터 타입</a>
+        <a href="#constraints">제약조건</a>
+        <a href="#ddl-practice-bc">DDL 실습(BusinessCard)</a>
+        <a href="#alter">ALTER TABLE</a>
+        <a href="#truncate-drop">TRUNCATE / DROP</a>
+        <a href="#dml">DML 개요</a>
+        <a href="#insert">INSERT</a>
+        <a href="#insert-errors">INSERT 오류</a>
+        <a href="#update">UPDATE</a>
+        <a href="#delete">DELETE</a>
+        <a href="#safety">안전 실행 절차</a>
+        <a href="#compare">DELETE·TRUNCATE·DROP 비교</a>
+        <a href="#lifecycle">CRUD 생애주기</a>
+        <a href="#tx">트랜잭션</a>
+        <a href="#checklist">실습 체크리스트</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- 학습 목표 -->
+    <section id="goals" class="section">
+      <h2>학습 목표</h2>
+      <div class="card">
+        <ul class="list">
+          <li>DDL과 DML의 역할 차이를 설명할 수 있다.</li>
+          <li>데이터베이스/테이블을 생성·변경·삭제하는 명령을 실행할 수 있다.</li>
+          <li>INSERT/UPDATE/DELETE를 안전하게 사용할 수 있다.</li>
+          <li>제약조건을 적용하고, 제약조건 위반 오류를 이해할 수 있다.</li>
+          <li>트랜잭션으로 되돌리기(ROLLBACK)와 확정(COMMIT)을 실습할 수 있다.</li>
+        </ul>
+
+        <div class="note">
+          <strong>핵심 습관</strong> UPDATE/DELETE는 실행 전후에 SELECT로 확인하고 WHERE 조건을 반드시 점검해야 한다.
+        </div>
+      </div>
+    </section>
+
+    <!-- 큰 그림 -->
+    <section id="overview" class="section">
+      <h2>큰 그림</h2>
+      <div class="card">
+        <p>
+          데이터베이스 작업은 보통 <strong>구조를 만든 뒤</strong> 그 구조에 <strong>데이터를 넣고</strong>,
+          필요하면 <strong>수정</strong>하거나 <strong>삭제</strong>하는 순서로 진행된다.
+        </p>
+
+        <table class="table">
+          <thead>
+            <tr>
+              <th>단계</th>
+              <th>목표</th>
+              <th>대표 명령</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1) 구조 정의</td>
+              <td>DB/테이블/컬럼/제약조건을 만든다.</td>
+              <td>CREATE, ALTER</td>
+            </tr>
+            <tr>
+              <td>2) 데이터 조작</td>
+              <td>데이터를 넣고, 바꾸고, 지운다.</td>
+              <td>INSERT, UPDATE, DELETE</td>
+            </tr>
+            <tr>
+              <td>3) 안전하게 처리</td>
+              <td>실수하면 되돌릴 수 있게 묶어서 처리한다.</td>
+              <td>START TRANSACTION, COMMIT, ROLLBACK</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="note">
+          <strong>한 문장 정리</strong> DDL은 “틀(구조)”을 만들고, DML은 “내용(데이터)”을 다룬다.
+        </div>
+      </div>
+    </section>
+
+    <!-- Database / Schema -->
+    <section id="schema" class="section">
+      <h2>Database와 Schema</h2>
+      <div class="card">
+        <p>
+          데이터베이스(Database)는 데이터를 실제로 저장하고 관리하는 <strong>물리적 저장소</strong>이다.
+          스키마(Schema)는 데이터베이스 내부의 구조를 정의한 <strong>논리적 설계</strong>이다.
+        </p>
+        <p>
+          MySQL에서는 Database와 Schema를 같은 개념으로 사용한다.
+          즉, CREATE DATABASE로 만드는 대상이 곧 스키마이다.
+        </p>
+        <div class="note">
+          <strong>정리</strong> MySQL에서는 “Database = Schema”로 이해하면 된다.
+        </div>
+      </div>
+    </section>
+
+    <!-- 테이블 개념 -->
+    <section id="table-concept" class="section">
+      <h2>테이블과 데이터 구조</h2>
+      <div class="card">
+        <p>
+          테이블(Table)은 스키마를 기반으로 정의한 데이터를 저장하는 기본 단위이다.
+          데이터는 행(Row)과 열(Column) 형태로 저장된다.
+        </p>
+        <ul class="list">
+          <li>Row = Record이다. 하나의 데이터 묶음이다.</li>
+          <li>Column = Attribute이다. 데이터의 속성이다.</li>
+          <li>Table = 여러 Record를 담는 구조이다.</li>
+        </ul>
+        <div class="note">
+          <strong>비유</strong> 테이블은 엑셀의 Sheet, Row는 한 줄, Column은 열이다.
+        </div>
+      </div>
+    </section>
+
+    <!-- DDL 개요 -->
+    <section id="ddl" class="section">
+      <h2>DDL 개요</h2>
+      <div class="card">
+        <p>
+          DDL(Data Definition Language)은 데이터베이스의 <strong>구조</strong>를 정의하는 언어이다.
+          테이블의 컬럼, 데이터 타입, 제약조건 같은 “설계”를 다룬다.
+        </p>
+
+        <h3>DDL 핵심 명령어</h3>
+        <ul class="list">
+          <li><strong>CREATE</strong> DB/테이블을 만든다.</li>
+          <li><strong>ALTER</strong> 테이블 구조를 바꾼다.</li>
+          <li><strong>DROP</strong> DB/테이블을 삭제한다.</li>
+          <li><strong>TRUNCATE</strong> 테이블의 데이터를 전체 삭제한다(구조는 유지한다).</li>
+        </ul>
+
+        <div class="note">
+          <strong>주의</strong> DDL은 되돌리기(ROLLBACK)가 어렵거나 기대하면 안 되는 경우가 많다. 실행 전 확인이 필수이다.
+        </div>
+      </div>
+    </section>
+
+    <!-- DB 생성/선택/삭제 -->
+    <section id="db" class="section">
+      <h2>DB 생성/선택/삭제</h2>
+      <div class="card">
+
+        <h3>CREATE DATABASE</h3>
+        <p>
+          새로운 데이터베이스(작업 공간)를 만든다. 같은 이름의 DB가 이미 존재할 수 있으므로
+          실습에서는 <strong>IF NOT EXISTS</strong>를 붙여 안전하게 만든다.
+        </p>
+        <pre><code>CREATE DATABASE [IF NOT EXISTS] database_name;
+
+CREATE DATABASE IF NOT EXISTS sampleDB;</code></pre>
+
+        <div class="note">
+          <strong>IF NOT EXISTS</strong>는 “이미 있으면 만들지 말고 넘어간다”는 의미이다. 중복 생성 에러를 예방한다.
+        </div>
+
+        <h3>SHOW DATABASES</h3>
+        <p>
+          서버에 존재하는 데이터베이스 목록을 출력한다.
+          실습 중 DB가 제대로 생성되었는지 확인할 때 사용한다.
+        </p>
+        <pre><code>SHOW DATABASES;</code></pre>
+
+        <h3>USE</h3>
+        <p>
+          앞으로 실행할 SQL의 대상 데이터베이스를 선택한다.
+          테이블을 만들거나 조회/수정하려면 먼저 USE로 DB를 선택해야 한다.
+        </p>
+        <pre><code>USE sampleDB;</code></pre>
+
+        <h3>DROP DATABASE</h3>
+        <p>
+          데이터베이스 자체를 삭제한다. DB 안에 들어있는 테이블과 데이터가 함께 사라진다.
+          실습에서는 <strong>IF EXISTS</strong>를 붙여 “없어도 에러 없이 넘어가게” 만든다.
+        </p>
+        <pre><code>DROP DATABASE [IF EXISTS] database_name;
+
+DROP DATABASE IF EXISTS sampleDB;</code></pre>
+
+      </div>
+    </section>
+
+    <!-- 테이블 생성 -->
+    <section id="create-table" class="section">
+      <h2>테이블 생성</h2>
+      <div class="card">
+
+        <h3>CREATE TABLE</h3>
+        <p>
+          테이블(데이터를 저장하는 표)을 만든다. 각 컬럼은 <strong>이름</strong>과 <strong>데이터 타입</strong>을 가져야 한다.
+          필요하면 제약조건도 함께 정의한다.
+        </p>
+        <pre><code>CREATE TABLE [IF NOT EXISTS] table_name (
+  column_name data_type,
+  column_name2 data_type
+);</code></pre>
+
+        <h3>SHOW TABLES</h3>
+        <p>
+          현재 선택된 데이터베이스에 있는 테이블 목록을 보여준다.
+          테이블이 만들어졌는지 빠르게 확인할 때 사용한다.
+        </p>
+        <pre><code>SHOW TABLES;</code></pre>
+
+        <h3>DESC</h3>
+        <p>
+          테이블 구조를 확인한다. 컬럼명, 타입, NULL 허용 여부, 키 정보 등을 확인할 수 있다.
+          INSERT 전에 DESC로 구조를 확인하는 습관이 중요하다.
+        </p>
+        <pre><code>DESC hongong1;</code></pre>
+
+        <h3>예제</h3>
+        <pre><code>USE market_db;
+
+CREATE TABLE hongong1 (
+  toy_id   INT,
+  toy_name CHAR(4),
+  age      INT
+);
+
+SHOW TABLES;
+DESC hongong1;</code></pre>
+
+      </div>
+    </section>
+
+    <!-- 데이터 타입 상세 -->
+    <section id="types" class="section">
+      <h2>데이터 타입 상세</h2>
+      <div class="card">
+
+        <h3>정수형</h3>
+        <ul class="list">
+          <li>TINYINT (-128 ~ 127 / UNSIGNED 0 ~ 255)</li>
+          <li>INT (약 -21억 ~ 21억 / UNSIGNED는 더 큰 범위)</li>
+          <li>BIGINT (아주 큰 정수 값)</li>
+        </ul>
+
+        <h3>실수형</h3>
+        <ul class="list">
+          <li>FLOAT(size, d)</li>
+          <li>DOUBLE(size, d)</li>
+          <li>DECIMAL(size, d)</li>
+        </ul>
+
+        <h3>문자열</h3>
+        <ul class="list">
+          <li>CHAR 고정 길이 문자열이다(최대 255자).</li>
+          <li>VARCHAR 가변 길이 문자열이다(최대 255자).</li>
+          <li>TEXT는 긴 문자열을 저장한다(최대 65,535자).</li>
+          <li>MEDIUMTEXT는 더 긴 문자열을 저장한다.</li>
+          <li>LONGTEXT는 매우 긴 문자열을 저장한다.</li>
+        </ul>
+
+        <h3>BLOB(Binary Large Object)</h3>
+        <p>이미지나 파일 같은 바이너리 데이터를 저장할 때 사용한다.</p>
+        <ul class="list">
+          <li>BLOB</li>
+          <li>MEDIUMBLOB</li>
+          <li>LARGEBLOB</li>
+        </ul>
+
+        <div class="note">
+          <strong>주의</strong> 데이터 분석용 테이블에는 BLOB를 직접 저장하기보다 파일 경로나 URL을 저장하는 경우가 많다.
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 제약조건 -->
+    <section id="constraints" class="section">
+      <h2>제약조건</h2>
+      <div class="card">
+        <p>
+          제약조건은 “이 컬럼에는 이런 규칙을 지켜라”라는 품질 규칙이다.
+          제약조건이 없으면 중복/누락/이상한 값이 쌓여 데이터가 망가질 수 있다.
+        </p>
+
+        <ul class="list">
+          <li><strong>NOT NULL</strong> 비어있는 값을 허용하지 않는다.</li>
+          <li><strong>DEFAULT</strong> 값이 없으면 기본값을 넣는다.</li>
+          <li><strong>UNIQUE</strong> 중복 값을 허용하지 않는다.</li>
+          <li><strong>PRIMARY KEY</strong> 행을 구분하는 고유한 키이다(중복/NULL 불가).</li>
+          <li><strong>AUTO_INCREMENT</strong> 숫자 키를 자동으로 증가시킨다.</li>
+        </ul>
+
+        <h3>AUTO_INCREMENT + PRIMARY KEY 예제</h3>
+        <p>AUTO_INCREMENT는 보통 PRIMARY KEY와 같이 사용하며 NULL을 넣으면 자동 번호가 생성된다.</p>
+        <pre><code>CREATE TABLE hongong2 (
+  toy_id   INT AUTO_INCREMENT PRIMARY KEY,
+  toy_name CHAR(4),
+  age      INT
+);
+
+INSERT INTO hongong2 VALUES (NULL, '보핍', 25);
+INSERT INTO hongong2 VALUES (NULL, '슬링키', 22);
+INSERT INTO hongong2 VALUES (NULL, '렉스', 21);</code></pre>
+
+        <div class="note">
+          <strong>핵심</strong> PRIMARY KEY는 UPDATE/DELETE의 WHERE 조건으로 가장 안전하다.
+        </div>
+      </div>
+    </section>
+
+    <!-- DDL 실습: BusinessCard -->
+    <section id="ddl-practice-bc" class="section">
+      <h2>DDL 설계 실습 – BusinessCard</h2>
+      <div class="card">
+
+        <h3>1) 테이블 생성</h3>
+        <p>이름, 주소, 전화번호를 저장하는 BusinessCard 테이블을 생성한다.</p>
+        <pre><code>CREATE TABLE BusinessCard (
+  Name VARCHAR(255),
+  Address VARCHAR(255),
+  Telephone VARCHAR(255)
+);
+
+SHOW TABLES;
+DESC BusinessCard;</code></pre>
+
+        <h3>2) NOT NULL 제약조건 추가</h3>
+        <p>Name 컬럼에 NOT NULL을 추가하고, NULL 입력이 실패하는 것을 확인한다.</p>
+        <pre><code>ALTER TABLE BusinessCard
+MODIFY Name VARCHAR(255) NOT NULL;
+
+INSERT INTO BusinessCard
+VALUES ('Bob','Seocho-dong 123','123-4567');
+
+INSERT INTO BusinessCard
+VALUES ('Sam','Sindang-dong 456','321-4321');
+
+-- NOT NULL 위반으로 실패할 수 있다
+INSERT INTO BusinessCard
+VALUES (NULL,'Seocho-dong 369','123-3333');
+
+SELECT * FROM BusinessCard;</code></pre>
+
+        <div class="note">
+          <strong>의미</strong> 제약조건은 “규칙을 지키지 않는 데이터는 입력되지 않는다”는 것을 보장한다.
+        </div>
+
+        <h3>3) idx 컬럼 추가 후 PK/AUTO_INCREMENT 적용</h3>
+        <p>
+          처음부터 완벽한 테이블을 만들기보다, 필요에 따라 컬럼과 키를 추가하는 흐름을 실습한다.
+        </p>
+        <pre><code>ALTER TABLE BusinessCard
+ADD COLUMN idx INT;
+
+ALTER TABLE BusinessCard
+MODIFY idx INT AUTO_INCREMENT PRIMARY KEY;
+
+DESC BusinessCard;
+SELECT * FROM BusinessCard;</code></pre>
+
+        <h3>4) email 컬럼 추가 + DEFAULT 설정 + default 키워드 활용</h3>
+        <pre><code>ALTER TABLE BusinessCard
+ADD COLUMN email VARCHAR(100);
+
+ALTER TABLE BusinessCard
+ALTER email SET DEFAULT 'unknown@example.com';
+
+-- default 키워드를 사용하면 DEFAULT 값이 자동으로 들어간다
+INSERT INTO BusinessCard
+VALUES ('John2','Sadang-dong 448','123-4587', default, default);
+
+SELECT * FROM BusinessCard;
+DESC BusinessCard;</code></pre>
+
+        <div class="note">
+          <strong>중요</strong> default는 “기본값을 사용하겠다”는 의미이며, DEFAULT 설정과 함께 쓰면 편리하다.
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ALTER TABLE -->
+    <section id="alter" class="section">
+      <h2>ALTER TABLE</h2>
+      <div class="card">
+        <p>
+          ALTER TABLE은 이미 만들어진 테이블의 구조를 변경한다.
+          컬럼 타입을 바꾸거나, 컬럼을 추가/삭제하거나, 키를 추가하는 데 사용한다.
+        </p>
+
+        <h3>MODIFY COLUMN</h3>
+        <p>컬럼의 데이터 타입이나 제약조건을 변경한다.</p>
+        <pre><code>ALTER TABLE hongong1
+MODIFY COLUMN toy_name VARCHAR(50);</code></pre>
+
+        <h3>ADD COLUMN</h3>
+        <p>새로운 컬럼을 추가한다.</p>
+        <pre><code>ALTER TABLE hongong1
+ADD COLUMN email VARCHAR(100);</code></pre>
+
+        <h3>DROP COLUMN</h3>
+        <p>컬럼을 삭제한다. 컬럼 데이터도 함께 사라진다.</p>
+        <pre><code>ALTER TABLE hongong1
+DROP COLUMN age;</code></pre>
+
+        <h3>PRIMARY KEY 추가/교체</h3>
+        <p>PRIMARY KEY는 한 테이블에 하나만 설정 가능하며, 기존 PK가 있으면 삭제 후 추가한다.</p>
+        <pre><code>ALTER TABLE member
+ADD PRIMARY KEY (member_id);
+
+ALTER TABLE member DROP PRIMARY KEY;
+ALTER TABLE member ADD PRIMARY KEY (member_id);</code></pre>
+      </div>
+    </section>
+
+    <!-- TRUNCATE / DROP -->
+    <section id="truncate-drop" class="section">
+      <h2>TRUNCATE / DROP</h2>
+      <div class="card">
+
+        <h3>TRUNCATE TABLE</h3>
+        <p>
+          테이블의 모든 데이터를 한 번에 삭제한다. WHERE를 사용할 수 없으며, 구조는 유지된다.
+        </p>
+        <pre><code>TRUNCATE TABLE hongong1;</code></pre>
+
+        <h3>DROP TABLE</h3>
+        <p>
+          테이블 자체를 삭제한다. 구조와 데이터가 모두 사라진다.
+        </p>
+        <pre><code>DROP TABLE hongong1;</code></pre>
+
+        <div class="note">
+          <strong>중요</strong> TRUNCATE와 DROP은 되돌릴 수 없다고 생각하고 실행해야 한다.
+        </div>
+
+      </div>
+    </section>
+
+    <!-- DML 개요 -->
+    <section id="dml" class="section">
+      <h2>DML 개요</h2>
+      <div class="card">
+        <p>
+          DML(Data Manipulation Language)은 테이블의 데이터를 조작한다.
+          CRUD는 INSERT / SELECT / UPDATE / DELETE이다.
+        </p>
+
+        <h3>SELECT</h3>
+        <p>
+          SELECT는 데이터를 읽는 명령이다. UPDATE/DELETE 전에 대상 행을 확인하는 용도로도 필수이다.
+        </p>
+        <pre><code>SELECT 컬럼명
+FROM 테이블명
+WHERE 조건
+ORDER BY 컬럼
+LIMIT 숫자;
+
+SELECT * FROM hongong1;</code></pre>
+
+      </div>
+    </section>
+
+    <!-- INSERT -->
+    <section id="insert" class="section">
+      <h2>INSERT</h2>
+      <div class="card">
+        <p>
+          INSERT는 새로운 행(row)을 추가한다. 컬럼 리스트를 적으면 해당 컬럼에만 값을 넣고,
+          적지 않으면 테이블의 컬럼 순서대로 값을 넣는다.
+        </p>
+
+        <h3>기본 문법</h3>
+        <pre><code>INSERT INTO table_name (컬럼리스트)
+VALUES (값리스트),
+       (값리스트2);</code></pre>
+
+        <h3>정상 입력 예제</h3>
+        <pre><code>INSERT INTO hongong1(toy_id, toy_name, age)
+VALUES (1, '우디', 25);
+
+INSERT INTO hongong1(toy_id, toy_name)
+VALUES (2, '버즈');
+
+INSERT INTO hongong1(toy_name, age, toy_id)
+VALUES ('제시', 20, 3);
+
+INSERT INTO hongong1
+VALUES (5, '포테이토', 40);</code></pre>
+
+        <div class="note">
+          <strong>핵심</strong> 컬럼 개수와 값 개수가 일치해야 하며, 데이터 타입도 맞아야 한다.
+        </div>
+      </div>
+    </section>
+
+    <!-- INSERT 오류 -->
+    <section id="insert-errors" class="section">
+      <h2>INSERT에서 자주 발생하는 오류</h2>
+      <div class="card">
+        <p>
+          INSERT는 제약조건과 타입에 의해 실패하는 경우가 많다.
+          에러를 경험하고 원인을 이해하면 이후 실수가 크게 줄어든다.
+        </p>
+
+        <h3>1) NOT NULL 위반</h3>
+        <p>NOT NULL 컬럼에 값을 넣지 않으면 저장할 수 없다.</p>
+        <pre><code>CREATE TABLE member_nn (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  member_id VARCHAR(20) NOT NULL,
+  name VARCHAR(20) NOT NULL,
+  address VARCHAR(255) NOT NULL
+);
+
+-- address 누락으로 에러가 날 수 있다
+INSERT INTO member_nn (member_id, name)
+VALUES ('test', '홍길동');</code></pre>
+
+        <h3>2) UNIQUE 위반</h3>
+        <p>UNIQUE 컬럼에 같은 값을 두 번 넣으면 중복이므로 저장할 수 없다.</p>
+        <pre><code>CREATE TABLE member_uq (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  member_id VARCHAR(20) UNIQUE,
+  name VARCHAR(20),
+  address VARCHAR(255)
+);
+
+INSERT INTO member_uq (member_id, name, address)
+VALUES ('hero', '임영웅', '서울');
+
+-- 중복으로 에러가 날 수 있다
+INSERT INTO member_uq (member_id, name, address)
+VALUES ('hero', '중복', '부산');</code></pre>
+
+        <h3>3) 데이터 타입 불일치</h3>
+        <p>숫자 컬럼에 문자를 넣는 등 타입이 맞지 않으면 에러 또는 잘못된 변환이 발생할 수 있다.</p>
+        <pre><code>CREATE TABLE type_test (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  price INT NOT NULL
+);
+
+INSERT INTO type_test (price) VALUES ('만원');</code></pre>
+
+        <h3>4) 컬럼 개수 불일치</h3>
+        <p>컬럼 수와 값 수가 다르면 INSERT가 실패한다.</p>
+        <pre><code>CREATE TABLE count_test (
+  a INT,
+  b INT,
+  c INT
+);
+
+INSERT INTO count_test (a, b, c)
+VALUES (1, 2);</code></pre>
+
+        <div class="note">
+          <strong>실무 습관</strong> INSERT 전에는 DESC로 구조 확인 → 1건 테스트 → 다건 입력 순서가 안전하다.
+        </div>
+      </div>
+    </section>
+
+    <!-- UPDATE -->
+    <section id="update" class="section">
+      <h2>UPDATE</h2>
+      <div class="card">
+        <p>
+          UPDATE는 기존 행의 컬럼 값을 변경한다.
+          WHERE가 없으면 “모든 행”이 변경될 수 있으므로 가장 위험한 명령 중 하나이다.
+        </p>
+
+        <h3>기본 문법</h3>
+        <pre><code>UPDATE table_name
+SET col1 = 값1,
+    col2 = 값2
+WHERE 조건;</code></pre>
+
+        <div class="note">
+          <strong>가장 중요</strong> WHERE가 없으면 전체 행이 바뀔 수 있다.
+        </div>
+
+        <h3>정상 수정 예제</h3>
+        <pre><code>UPDATE hongong2
+SET age = 30
+WHERE toy_id = 1;</code></pre>
+
+        <h3>누적 업데이트(기존 값 활용)</h3>
+        <p>
+          재고처럼 “현재 값에서 더하거나 빼야 하는” 컬럼은 누적 업데이트를 사용한다.
+        </p>
+        <pre><code>UPDATE product
+SET balance = balance + 5
+WHERE prod_name = '바나나';</code></pre>
+
+        <h3>실수 사고 예제</h3>
+        <pre><code>-- WHERE가 없으면 전체 가격이 0이 될 수 있다
+UPDATE product
+SET price = 0;</code></pre>
+      </div>
+    </section>
+
+    <!-- DELETE -->
+    <section id="delete" class="section">
+      <h2>DELETE</h2>
+      <div class="card">
+        <p>
+          DELETE는 조건에 맞는 행을 삭제한다.
+          WHERE가 없으면 모든 행이 삭제될 수 있으므로 UPDATE와 함께 가장 위험한 명령이다.
+        </p>
+
+        <h3>기본 문법</h3>
+        <pre><code>DELETE FROM table_name
+WHERE 조건;</code></pre>
+
+        <div class="note">
+          <strong>가장 중요</strong> WHERE가 없으면 테이블이 비어버릴 수 있다.
+        </div>
+
+        <h3>정상 삭제 예제</h3>
+        <pre><code>DELETE FROM hongong2
+WHERE toy_id = 1;</code></pre>
+      </div>
+    </section>
+
+    <!-- 안전 실행 절차 -->
+    <section id="safety" class="section">
+      <h2>UPDATE / DELETE 안전 실행 절차</h2>
+      <div class="card">
+        <p>UPDATE/DELETE는 아래 순서로 실행해야 한다.</p>
+
+        <ul class="list">
+          <li>1단계 SELECT로 대상 행을 먼저 확인한다.</li>
+          <li>2단계 WHERE 조건이 맞는지 다시 확인한다.</li>
+          <li>3단계 UPDATE/DELETE를 실행한다.</li>
+          <li>4단계 SELECT로 결과를 다시 확인한다.</li>
+          <li>5단계 가능하면 트랜잭션으로 묶고 COMMIT/ROLLBACK을 선택한다.</li>
+        </ul>
+
+        <h3>안전한 UPDATE 예시</h3>
+        <pre><code>SELECT prod_id, prod_name, price
+FROM product
+WHERE prod_name = '바나나';
+
+UPDATE product
+SET price = 2000
+WHERE prod_name = '바나나';
+
+SELECT prod_id, prod_name, price
+FROM product
+WHERE prod_name = '바나나';</code></pre>
+
+        <h3>안전한 DELETE 예시</h3        <pre><code>SELECT *
+FROM member
+WHERE member_id = 'newbie';
+
+DELETE FROM member
+WHERE member_id = 'newbie';
+
+SELECT *
+FROM member
+WHERE member_id = 'newbie';</code></pre>
+
+        <div class="note">
+          <strong>추가 팁</strong> WHERE 조건은 가능하면 PK(기본키) 기반으로 작성하는 것이 가장 안전하다.
+        </div>
+      </div>
+    </section>
+
+    <!-- 비교 -->
+    <section id="compare" class="section">
+      <h2>DELETE · TRUNCATE · DROP 비교</h2>
+      <div class="card">
+        <p>세 명령은 결과가 크게 다르므로 반드시 구분해야 한다.</p>
+
+        <table class="table">
+          <thead>
+            <tr>
+              <th>구문</th>
+              <th>분류</th>
+              <th>WHERE</th>
+              <th>ROLLBACK</th>
+              <th>AUTO_INCREMENT</th>
+              <th>결과</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>DELETE</strong></td>
+              <td>DML</td>
+              <td>가능</td>
+              <td>가능</td>
+              <td>보통 유지</td>
+              <td>조건에 맞는 행을 삭제한다.</td>
+            </tr>
+            <tr>
+              <td><strong>TRUNCATE</strong></td>
+              <td>DDL 성격</td>
+              <td>불가</td>
+              <td>일반적으로 불가</td>
+              <td>초기화되는 경우가 많다</td>
+              <td>테이블 데이터를 전체 삭제한다.</td>
+            </tr>
+            <tr>
+              <td><strong>DROP</strong></td>
+              <td>DDL</td>
+              <td>불가</td>
+              <td>불가</td>
+              <td>해당 없음</td>
+              <td>테이블 자체를 삭제한다.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="note">
+          <strong>한 줄 결론</strong> 일부만 지우려면 DELETE, 전체 데이터를 비우려면 TRUNCATE, 테이블을 없애려면 DROP이다.
+        </div>
+      </div>
+    </section>
+
+    <!-- CRUD 생애주기 -->
+    <section id="lifecycle" class="section">
+      <h2>CRUD 생애주기 실습</h2>
+      <div class="card">
+        <p>생성 → 수정 → 삭제 흐름을 한 번에 실습한다.</p>
+
+        <pre><code>SELECT prod_id, prod_name, price, manuf, balance
+FROM product
+ORDER BY prod_id;
+
+INSERT INTO product (prod_name, price, date_of_prod, manuf, balance)
+VALUES ('초코우유', 1200, '2025-12-19', '서울우유', 10);
+
+SELECT prod_id, prod_name, price
+FROM product
+WHERE prod_name = '초코우유';
+
+UPDATE product
+SET price = 1300
+WHERE prod_name = '초코우유';
+
+SELECT prod_id, prod_name, price
+FROM product
+WHERE prod_name = '초코우유';
+
+DELETE FROM product
+WHERE prod_name = '초코우유';
+
+SELECT prod_id, prod_name, price
+FROM product
+WHERE prod_name = '초코우유';</code></pre>
+
+        <div class="note">
+          <strong>학습 포인트</strong> 매 단계마다 SELECT 확인을 넣으면 사고가 줄어든다.
+        </div>
+      </div>
+    </section>
+
+    <!-- 트랜잭션 -->
+    <section id="tx" class="section">
+      <h2>트랜잭션</h2>
+      <div class="card">
+        <p>
+          트랜잭션은 여러 DML을 “한 묶음”으로 처리한다.
+          중간에 문제가 생기면 ROLLBACK으로 되돌리고, 문제가 없으면 COMMIT으로 확정한다.
+        </p>
+
+        <h3>autocommit 확인/전환</h3>
+        <p>autocommit이 1이면 각 SQL이 실행되는 즉시 확정된다. 실습에서는 0으로 바꿔서 실습한다.</p>
+        <pre><code>SELECT @@autocommit;
+
+SET autocommit = 0;
+START TRANSACTION;</code></pre>
+
+        <h3>ROLLBACK 실습</h3>
+        <pre><code>UPDATE product
+SET price = 1200
+WHERE prod_name = '삼각김밥';
+
+INSERT INTO member (id, member_id, name, address)
+VALUES (NULL, 'newbie', '뉴비', '서울 마포구 성산동');
+
+ROLLBACK;</code></pre>
+
+        <h3>COMMIT 실습</h3>
+        <pre><code>START TRANSACTION;
+
+UPDATE product
+SET price = 1200
+WHERE prod_name = '삼각김밥';
+
+INSERT INTO member (id, member_id, name, address)
+VALUES (NULL, 'newbie', '뉴비', '서울 마포구 성산동');
+
+COMMIT;</code></pre>
+
+        <h3>autocommit 복구</h3>
+        <pre><code>SET autocommit = 1;
+
+UPDATE product
+SET balance = balance + 5
+WHERE prod_name = '바나나';</code></pre>
+
+        <div class="note">
+          <strong>매우 중요</strong> 일반적으로 DDL(CREATE, DROP, TRUNCATE)은 ROLLBACK 대상으로 기대하면 안 된다.
+        </div>
+      </div>
+    </section>
+
+    <!-- 체크리스트 -->
+    <section id="checklist" class="section">
+      <h2>실습 체크리스트</h2>
+      <div class="card">
+        <ul class="list">
+          <li>CREATE DATABASE로 DB를 만들 수 있다.</li>
+          <li>USE로 DB를 선택할 수 있다.</li>
+          <li>CREATE TABLE로 테이블을 만들고 DESC로 확인할 수 있다.</li>
+          <li>NOT NULL/UNIQUE/DEFAULT/PRIMARY KEY/AUTO_INCREMENT 의미를 설명할 수 있다.</li>
+          <li>ALTER TABLE로 컬럼/제약조건을 추가·수정·삭제할 수 있다.</li>
+          <li>BusinessCard 실습에서 NOT NULL 위반 상황을 재현할 수 있다.</li>
+          <li>DEFAULT 값과 default 키워드 INSERT를 사용할 수 있다.</li>
+          <li>INSERT 오류(NOT NULL/UNIQUE/타입/개수)을 원인과 함께 설명할 수 있다.</li>
+          <li>UPDATE/DELETE를 안전 실행 절차로 수행할 수 있다.</li>
+          <li>트랜잭션에서 ROLLBACK/COMMIT 의미를 설명할 수 있다.</li>
+        </ul>
+
+        <p class="foot">끝이다. 다음 단계로 SELECT 심화(조인/그룹/정렬/페이징) 실습으로 확장하면 된다.</p>
+      </div>
+    </section>
+
+    <div class="footer">
+      <div class="container">
+        MySQL DDL + DML 강의안이다. UPDATE/DELETE는 반드시 안전 실행 절차를 지켜야 한다.
+      </div>
+    </div>
+
+  </main>
+</body>
+</html>

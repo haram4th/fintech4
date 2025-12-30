@@ -1,0 +1,786 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>데이터베이스 설계(ERD) + 정규화 통합 강의안</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <header class="header">
+    <div class="container">
+      <h1 class="title">데이터베이스 설계(ERD) + 정규화(1NF~3NF) 통합 강의안</h1>
+      <p class="subtitle">
+        ERD로 구조를 잡고 → 정규화로 중복을 줄이고 → 최종적으로 테이블/키/관계를 SQL로 구현하는 흐름이다.
+      </p>
+
+      <nav class="toc" aria-label="목차">
+        <a href="#erd-what">ERD란</a>
+        <a href="#erd-entity-attr">개체/속성</a>
+        <a href="#erd-terms-why">왜 Entity/Attribute라고 부르는가</a>
+        <a href="#erd-rel">관계/카디널리티</a>
+        <a href="#erd-pk">기본키(PK)</a>
+        <a href="#erd-fk">외래키(FK)</a>
+        <a href="#erd-purpose">ERD 목적/활용</a>
+        <a href="#erd-consider">작성 시 고려사항</a>
+        <a href="#erd-practice">Workbench ERD 실습</a>
+        <a href="#erd-to-ddl">ERD → DB/테이블 생성</a>
+        <a href="#norm-what">정규화란</a>
+        <a href="#norm-anomaly">이상현상</a>
+        <a href="#norm-0nf">0NF</a>
+        <a href="#norm-1nf">1NF</a>
+        <a href="#norm-pk">기본키(정규화 관점)</a>
+        <a href="#norm-2nf">2NF</a>
+        <a href="#norm-2nf-data">2NF 실제 분리 결과</a>
+        <a href="#norm-3nf">3NF</a>
+        <a href="#norm-3nf-data">3NF 실제 분리 결과</a>
+        <a href="#norm-final">최종 결과</a>
+        <a href="#join-preview">JOIN 미리보기</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- =========================
+         ERD PART
+    ========================== -->
+    <section id="erd-what" class="section">
+      <h2>1. ERD(Entity Relationship Diagram)란</h2>
+      <div class="card">
+        <p>
+          ERD(Entity Relationship Diagram, 개체-관계 다이어그램)는 데이터베이스 설계 및 분석에 사용되는
+          시각적 모델링 도구이다. 데이터베이스에 저장될 주요 데이터(개체)와 그들 간의 관계를 도식화한 것이다.
+        </p>
+        <div class="note">
+          <strong>핵심</strong> ERD는 “무슨 테이블이 있고, 어떤 컬럼이 있고, 서로 어떻게 연결되는지”를 한눈에 보여주는 설계도이다.
+        </div>
+      </div>
+    </section>
+
+    <section id="erd-entity-attr" class="section">
+      <h2>2. 개체(Entity)와 속성(Attribute)</h2>
+
+      <div class="card">
+        <h3>2-1) 개체(Entity) = 테이블</h3>
+        <ul class="list">
+          <li>정의: 데이터베이스에서 관리하고자 하는 대상/객체이다.</li>
+          <li>예시: 고객, 제품, 주문 등이 개체가 된다.</li>
+          <li>표현: 보통 사각형(Box)으로 표시한다.</li>
+        </ul>
+
+        <h3>2-2) 속성(Attribute) = 컬럼</h3>
+        <ul class="list">
+          <li>정의: 개체가 가지는 특성/성질(= 컬럼)이다.</li>
+          <li>중요 속성: 기본키(PK) 같은 핵심 컬럼은 강조(밑줄 등)한다.</li>
+          <li>종류: 단순 속성, 복합 속성(예: 주소→시/구/동), 다중 값 속성(예: 전화번호 여러 개) 등이 있다.</li>
+        </ul>
+
+        <table class="table">
+          <thead>
+            <tr>
+              <th>개념</th>
+              <th>DB에서의 대응</th>
+              <th>예시</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Entity(개체)</td>
+              <td>Table(테이블)</td>
+              <td>user_tbl, buy_tbl</td>
+            </tr>
+            <tr>
+              <td>Attribute(속성)</td>
+              <td>Column(컬럼)</td>
+              <td>user_name, addr, prod_name, price</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="note">
+          <strong>추가 팁</strong> “다중 값 속성(전화번호 여러 개)” 같은 것은 한 칸에 콤마로 넣기보다, 별도 테이블로 분리하는 설계가 안전하다.
+        </div>
+      </div>
+    </section>
+
+    <!-- ✅ 추가된 섹션: 2와 3 사이 -->
+    <section id="erd-terms-why" class="section">
+      <h2>2-1. 논리적 설계에서 왜 테이블을 Entity, 컬럼을 Attribute라고 부르는가</h2>
+
+      <div class="card">
+        <p>
+          논리적 데이터베이스 설계에서는 아직 “DB 제품(MySQL/Oracle 등)에 실제로 테이블을 만드는 단계”가 아니다.
+          이 단계의 목적은 현실 세계의 데이터를 <b>개념으로 모델링</b>하고, 그 개념을 <b>구조로 정리</b>하는 것이다.
+          그래서 물리적인 용어(테이블/컬럼) 대신 모델링 용어(Entity/Attribute)를 사용한다.
+        </p>
+
+        <h3>핵심 개념이다</h3>
+        <ul class="list">
+          <li><b>Entity(개체)</b>는 현실 세계에서 구별 가능한 “대상”이다. 예: 학생, 강의, 주문, 상품이다.</li>
+          <li><b>Attribute(속성)</b>는 그 대상이 가지는 “특징/정보”이다. 예: 학생의 학번/이름, 주문의 날짜/금액이다.</li>
+        </ul>
+
+        <div class="note">
+          <strong>포인트</strong> 논리 설계는 “현실 세계를 정확히 표현하는 단계”이므로, 구현 용어보다 모델링 용어를 쓰는 것이 자연스럽다.
+        </div>
+
+        <h3>단계별 용어 정리이다</h3>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>단계</th>
+              <th>관점</th>
+              <th>대상(테이블)</th>
+              <th>속성(컬럼)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>개념 설계</td>
+              <td>현실 세계 모델링</td>
+              <td>Entity</td>
+              <td>Attribute</td>
+            </tr>
+            <tr>
+              <td>논리 설계</td>
+              <td>관계형 구조로 정리</td>
+              <td>Entity</td>
+              <td>Attribute</td>
+            </tr>
+            <tr>
+              <td>물리 설계</td>
+              <td>DB에 구현</td>
+              <td>Table</td>
+              <td>Column</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="note">
+          <strong>추가 팁</strong> 처음부터 “테이블/컬럼”만 생각하면 구현 위주로 흐르기 쉬우므로, ERD 단계에서는 “대상(Entity)과 성질(Attribute)” 관점으로 생각하는 습관이 중요하다.
+        </div>
+      </div>
+    </section>
+
+    <section id="erd-rel" class="section">
+      <h2>3. 관계(Relationship)와 카디널리티(Cardinality)</h2>
+      <div class="card">
+        <p>
+          관계(Relationship)는 두 개체 간 연관성을 나타내는 선(Line)이다.
+          예를 들어 고객과 주문 사이에는 “주문한다” 관계가 생긴다.
+        </p>
+
+        <h3>카디널리티(관계의 수)</h3>
+        <ul class="list">
+          <li><b>1:1</b> 한 개체가 다른 개체와 1개씩만 연결된다.</li>
+          <li><b>1:N</b> 한 개체(부모)가 여러 개체(자식)와 연결된다.</li>
+          <li><b>N:M</b> 서로 여러 개씩 연결된다. 보통 <b>중간 테이블(조인 테이블)</b>을 만들어 1:N + 1:N으로 풀어낸다.</li>
+        </ul>
+
+        <div class="note">
+          <strong>핵심</strong> 실무에서 N:M은 거의 그대로 두지 않고 “중간 테이블”을 만들어 관리하는 경우가 많다.
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================
+         PK / FK (moved here)
+    ========================== -->
+    <section id="erd-pk" class="section">
+      <h2>4. 기본키(Primary Key, PK)란</h2>
+      <div class="card">
+        <p>
+          기본키(Primary Key)는 테이블에서 <b>각 행(Row)을 유일하게 식별하는 컬럼</b>이다.
+          기본키 값은 중복될 수 없고, NULL을 허용하지 않는다.
+        </p>
+
+        <ul class="list">
+          <li>목적: “이 행이 누구인지(무엇인지)”를 정확히 구분하기 위함이다.</li>
+          <li>특징: 중복 불가, NULL 불가, 한 테이블에 1개의 기본키(또는 1개의 기본키 제약)이다.</li>
+          <li>활용: 조회/수정/삭제에서 가장 안전한 기준이 된다.</li>
+        </ul>
+
+        <div class="note">
+          <strong>핵심</strong> PK는 “이 행의 주민등록번호” 같은 역할이다.
+        </div>
+
+        <h3>PK의 예시(자연키/대리키/복합키)</h3>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>구분</th>
+              <th>설명</th>
+              <th>예시</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>자연키</td>
+              <td>현실 세계 의미가 있는 값이다.</td>
+              <td>이메일, 주민번호</td>
+            </tr>
+            <tr>
+              <td>대리키</td>
+              <td>의미 없는 인공 키이다. 보통 AUTO_INCREMENT를 쓴다.</td>
+              <td>user_id, buy_id</td>
+            </tr>
+            <tr>
+              <td>복합키</td>
+              <td>2개 이상 컬럼을 조합해 유일성을 만든다.</td>
+              <td>(student_id, course_name)</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="note">
+          <strong>실무 팁</strong> 변경 가능성이 있는 자연키 대신, 대리키(PK)를 두고 자연키에는 UNIQUE를 거는 방식도 자주 쓴다.
+        </div>
+      </div>
+    </section>
+
+    <section id="erd-fk" class="section">
+      <h2>5. 외래키(Foreign Key, FK)란</h2>
+      <div class="card">
+        <p>
+          외래키(Foreign Key)는 <b>다른 테이블의 기본키(PK)를 참조하는 컬럼</b>이다.
+          ERD에서 그린 “관계”를 DB가 직접 지키도록 만드는 제약 조건이다.
+        </p>
+
+        <ul class="list">
+          <li>보통 <b>자식 테이블</b>에 존재한다.</li>
+          <li>부모 테이블에 없는 값을 자식에 넣는 것을 막아 <b>참조 무결성</b>을 보장한다.</li>
+          <li>부모가 삭제/변경될 때 자식 데이터 처리 정책(Restrict/Cascade/Set Null)을 정할 수 있다.</li>
+        </ul>
+
+        <div class="note">
+          <strong>핵심</strong> FK는 “이 구매는 반드시 존재하는 회원의 구매이다” 같은 규칙을 DB 차원에서 강제한다.
+        </div>
+
+        <h3>FK가 없을 때 생기는 문제</h3>
+        <ul class="list">
+          <li>없는 회원 ID로 구매 데이터가 들어갈 수 있다(고아 데이터 발생 가능).</li>
+          <li>부모를 지웠는데 자식 데이터가 남아 데이터가 꼬일 수 있다.</li>
+        </ul>
+
+        <h3>ON DELETE / ON UPDATE 옵션</h3>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>옵션</th>
+              <th>설명</th>
+              <th>상황 예시</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>RESTRICT</td>
+              <td>자식이 있으면 부모 삭제/변경을 막는다.</td>
+              <td>회원이 구매 이력이 있으면 회원 삭제를 막는다.</td>
+            </tr>
+            <tr>
+              <td>CASCADE</td>
+              <td>부모 삭제/변경 시 자식도 함께 삭제/변경한다.</td>
+              <td>부모 키 변경 시 자식 FK도 자동 반영한다.</td>
+            </tr>
+            <tr>
+              <td>SET NULL</td>
+              <td>부모가 삭제되면 자식 FK를 NULL로 만든다.</td>
+              <td>관계를 끊고 데이터는 남겨야 할 때 사용한다.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <pre><code>CONSTRAINT fk_buy_user
+FOREIGN KEY (user_name) REFERENCES user_tbl(user_name)
+ON UPDATE CASCADE
+ON DELETE RESTRICT</code></pre>
+      </div>
+    </section>
+
+    <section id="erd-purpose" class="section">
+      <h2>6. ERD 작성의 목적 및 활용</h2>
+      <div class="card">
+        <ul class="list">
+          <li><b>개념적 모델링</b>: 요구사항을 기반으로 어떤 데이터가 필요한지 정리한다.</li>
+          <li><b>논리적 모델링</b>: 개념을 실제 테이블/컬럼/키 구조로 전환한다.</li>
+          <li><b>커뮤니케이션</b>: 개발자/DBA/기획자 사이에 데이터 구조를 명확히 공유한다.</li>
+          <li><b>문서화</b>: 유지보수 시 “왜 이렇게 설계했는지” 근거가 된다.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="erd-consider" class="section">
+      <h2>7. ERD 작성 시 고려 사항</h2>
+      <div class="card">
+        <ul class="list">
+          <li><b>명확한 개체 정의</b>: 어떤 테이블이 필요한지 먼저 분명히 해야 한다.</li>
+          <li><b>정확한 관계</b>: 1:1, 1:N, N:M 중 무엇인지 명확히 해야 한다.</li>
+          <li><b>속성 선택</b>: 꼭 필요한 컬럼만 두고, 식별 가능한 PK를 포함해야 한다.</li>
+          <li><b>정규화 고려</b>: 중복을 줄이고 무결성을 유지하기 위한 구조(1NF~3NF)를 고려해야 한다.</li>
+        </ul>
+
+        <div class="note">
+          <strong>연결 포인트</strong> ERD 단계에서 정규화를 같이 고려하면 “나중에 테이블 갈아엎는 비용”이 크게 줄어든다.
+        </div>
+      </div>
+    </section>
+
+    <section id="erd-practice" class="section">
+      <h2>8. MySQL Workbench ERD 실습 흐름</h2>
+      <div class="card">
+        <p>MySQL Workbench에서 ERD를 그리는 대표 흐름이다.</p>
+        <ol class="list">
+          <li>File → New Model 이다.</li>
+          <li>다이어그램 영역에서 마우스 우클릭 후 필요한 메뉴를 사용한다.</li>
+          <li>Edit Schema를 눌러 스키마 이름을 설정한다. 예: <code>db_model_practice</code> 이다.</li>
+          <li>EER Diagram(ERD) 창을 열고 Entity(테이블) 아이콘으로 테이블을 생성한다.</li>
+          <li>테이블을 더블클릭하여 Attribute(컬럼)를 추가/편집한다.</li>
+          <li>관계(1:N) 아이콘으로 부모 PK → 자식 FK를 연결한다.</li>
+          <li>File → Save Model로 <code>*.mwb</code> 파일로 저장한다.</li>
+        </ol>
+
+        <div class="note">
+          <strong>추가 팁</strong> 부모 테이블의 PK가 자식 테이블의 FK로 들어가는 구조(1:N)가 가장 흔한 형태이다.
+        </div>
+      </div>
+    </section>
+
+    <section id="erd-to-ddl" class="section">
+      <h2>9. ERD 다이어그램으로 DB, Table 만들기(DDL로 구현)</h2>
+
+      <div class="card">
+        <h3>9-1) “ERD → SQL”에서 꼭 확인할 것</h3>
+        <ul class="list">
+          <li>PK(기본키)가 무엇인지 확인한다.</li>
+          <li>FK(외래키)가 어디를 참조하는지 확인한다.</li>
+          <li>1:N 관계면 “자식 테이블이 FK를 가진다”가 기본 원칙이다.</li>
+        </ul>
+
+        <h3>9-2) 예시: user_tbl(부모) + buy_tbl(자식) 구조</h3>
+        <p class="foot">ERD 실습에서 자주 쓰는 전형적인 예시이다.</p>
+
+        <pre><code>-- CREATE: DB/테이블을 만든다.
+CREATE DATABASE IF NOT EXISTS db_model_practice;
+USE db_model_practice;
+
+-- 부모 테이블(user_tbl)이다.
+CREATE TABLE IF NOT EXISTS user_tbl (
+  user_name   VARCHAR(30) NOT NULL,
+  birth_year  INT,
+  addr        VARCHAR(50),
+  phone       VARCHAR(30),
+  PRIMARY KEY (user_name)
+);
+
+-- 자식 테이블(buy_tbl)이다. 부모(user_tbl)의 PK를 FK로 참조한다.
+CREATE TABLE IF NOT EXISTS buy_tbl (
+  buy_id     INT AUTO_INCREMENT,
+  user_name  VARCHAR(30) NOT NULL,
+  prod_name  VARCHAR(50) NOT NULL,
+  price      INT NOT NULL,
+  amount     INT NOT NULL,
+  PRIMARY KEY (buy_id),
+  CONSTRAINT fk_buy_user
+    FOREIGN KEY (user_name) REFERENCES user_tbl(user_name)
+    ON UPDATE CASCADE
+    ON DELETE RESTRICT
+);</code></pre>
+
+        <div class="note">
+          <strong>추가 팁</strong> FK가 걸린 상태에서 부모를 삭제하려 하면 막히는 구조가 기본이다. 실무에서는 삭제 정책(Restrict/Cascade/Set Null)을 요구사항에 맞춰 정한다.
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================
+         NORMALIZATION PART
+    ========================== -->
+    <section id="norm-what" class="section">
+      <h2>10. 데이터 정규화란</h2>
+      <div class="card">
+        <p>
+          데이터 정규화는 테이블 설계에서 <b>중복을 줄이고</b>,
+          삽입/수정/삭제를 해도 <b>데이터가 어긋나지 않게</b> 구조를 잡는 방법이다.
+        </p>
+        <div class="note">
+          <strong>핵심 목표</strong> 같은 내용을 여러 번 저장하지 않게 하고, 한 번 바꾸면 정확히 반영되도록 만드는 것이다.
+        </div>
+      </div>
+    </section>
+
+    <section id="norm-anomaly" class="section">
+      <h2>11. 한 테이블에 다 넣으면 생기는 문제(이상현상)</h2>
+      <div class="card">
+        <ul class="list">
+          <li><b>중복 저장</b>: 같은 강사 전화번호가 수강생 수만큼 반복 저장된다.</li>
+          <li><b>수정 이상</b>: 전화번호를 바꿀 때 여러 행을 수정해야 하며, 일부가 누락되면 불일치가 생긴다.</li>
+          <li><b>삭제 이상</b>: 수강기록을 지우다 보면 강좌/강사 정보까지 같이 사라질 수 있다.</li>
+          <li><b>삽입 이상</b>: 아직 수강생이 없으면 강좌를 등록하기 애매한 구조가 된다.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="norm-0nf" class="section">
+      <h2>12. 0NF(정규화 이전) 예시</h2>
+      <div class="card">
+        <p class="foot">
+          여러 값을 한 칸에 넣는 형태이다. 예: <code>SQL, Python</code> 처럼 콤마로 저장한다.
+        </p>
+
+        <table class="table">
+          <thead>
+            <tr>
+              <th>학생ID</th>
+              <th>학생이름</th>
+              <th>강좌명(여러 값)</th>
+              <th>강사명(여러 값)</th>
+              <th>강사전화(여러 값)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td><td>철수</td><td>SQL, Python</td><td>김강사, 박강사</td><td>010-1111, 010-2222</td>
+            </tr>
+            <tr>
+              <td>2</td><td>영희</td><td>SQL</td><td>김강사</td><td>010-1111</td>
+            </tr>
+            <tr>
+              <td>3</td><td>민수</td><td>Python, Excel</td><td>박강사, 최강사</td><td>010-2222, 010-3333</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="note">
+          <strong>왜 문제가 되는가</strong> 한 칸에 여러 값이 있으므로 조건 조회/정렬/그룹화가 깔끔하게 되지 않는다.
+        </div>
+      </div>
+    </section>
+
+    <section id="norm-1nf" class="section">
+      <h2>13. 1NF(제1정규형)</h2>
+      <div class="card">
+        <div class="note">
+          <strong>1NF 규칙</strong> 한 칸(셀)에는 값 하나만 저장한다.
+        </div>
+
+        <h3>0NF → 1NF 변환 원리</h3>
+        <ul class="list">
+          <li>한 칸에 여러 값이 있으면, 행을 늘려서 하나씩 분리한다.</li>
+          <li>중요: <b>학생ID는 학생을 식별하는 값이므로 바뀌면 안 된다</b>. 같은 학생이 여러 강좌를 들으면 학생ID가 같은 행이 여러 개가 된다.</li>
+        </ul>
+
+        <h3>1NF 결과(같은 데이터를 행으로 분해한 결과이다)</h3>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>학생ID</th>
+              <th>학생이름</th>
+              <th>강좌명</th>
+              <th>강사명</th>
+              <th>강사전화</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>1</td><td>철수</td><td>SQL</td><td>김강사</td><td>010-1111</td></tr>
+            <tr><td>1</td><td>철수</td><td>Python</td><td>박강사</td><td>010-2222</td></tr>
+            <tr><td>2</td><td>영희</td><td>SQL</td><td>김강사</td><td>010-1111</td></tr>
+            <tr><td>3</td><td>민수</td><td>Python</td><td>박강사</td><td>010-2222</td></tr>
+            <tr><td>3</td><td>민수</td><td>Excel</td><td>최강사</td><td>010-3333</td></tr>
+          </tbody>
+        </table>
+
+        <div class="note">
+          <strong>체크 포인트</strong> 1NF는 “값을 쪼개는 단계”이다. 중복(김강사/010-1111 반복)은 아직 남아 있어도 정상이다.
+        </div>
+      </div>
+    </section>
+
+    <section id="norm-pk" class="section">
+      <h2>14. 기본키(Primary Key) 설정(정규화 관점)</h2>
+      <div class="card">
+        <p>
+          기본키는 “한 행을 유일하게 구분하는 값”이다.
+          1NF 결과에서 학생 한 명이 여러 강좌를 들 수 있으므로 학생ID만으로는 한 행을 구분할 수 없다.
+        </p>
+
+        <div class="note">
+          <strong>이 테이블에서 자연스러운 기본키 예</strong> (학생ID, 강좌명) 같이 두 개 이상 컬럼으로 구성된 복합 기본키가 필요하다.
+        </div>
+
+        <pre><code>-- 복합 PK 예시이다.
+PRIMARY KEY (student_id, course_name)</code></pre>
+
+        <div class="note">
+          <strong>추가 팁</strong> 실무에서는 enrollment_id 같은 대리키(PK)를 두고, (student_id, course_name)에 UNIQUE를 거는 방식도 자주 쓴다.
+        </div>
+      </div>
+    </section>
+
+    <section id="norm-2nf" class="section">
+      <h2>15. 2NF(제2정규형)</h2>
+      <div class="card">
+        <div class="note">
+          <strong>2NF 규칙</strong> 1NF를 만족한 상태에서, 복합키의 “일부”만으로 결정되는 컬럼을 분리한다.
+        </div>
+
+        <h3>부분 종속(Partial Dependency) 설명</h3>
+        <ul class="list">
+          <li>가정: 1NF 테이블의 PK를 (학생ID, 강좌명)으로 잡는다.</li>
+          <li>학생이름은 <b>학생ID만</b> 알면 정해진다 → 부분 종속이다.</li>
+          <li>강사명/강사전화는 <b>강좌명만</b> 알면 정해진다 → 부분 종속이다.</li>
+        </ul>
+
+        <div class="note">
+          <strong>핵심</strong> “PK 전체(학생ID+강좌명)”가 아닌 “PK 일부(학생ID만 또는 강좌명만)”로 결정되는 컬럼이 있으면 분리한다.
+        </div>
+      </div>
+    </section>
+
+    <section id="norm-2nf-data" class="section">
+      <h2>15-1. 2NF 실제 분리 결과를 그대로 보여준다</h2>
+      <div class="card">
+        <p class="foot">아래 3개 테이블이 2NF 결과이다. 데이터도 실제로 옮겨 담은 결과이다.</p>
+
+        <h3>① Students(학생) 테이블이다.</h3>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>student_id (PK)</th>
+              <th>student_name</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>1</td><td>철수</td></tr>
+            <tr><td>2</td><td>영희</td></tr>
+            <tr><td>3</td><td>민수</td></tr>
+          </tbody>
+        </table>
+
+        <h3>② Courses_2NF(강좌) 테이블이다. (2NF 단계에서는 강사전화가 아직 같이 있다)</h3>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>course_name (PK)</th>
+              <th>instructor_name</th>
+              <th>instructor_phone</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>SQL</td><td>김강사</td><td>010-1111</td></tr>
+            <tr><td>Python</td><td>박강사</td><td>010-2222</td></tr>
+            <tr><td>Excel</td><td>최강사</td><td>010-3333</td></tr>
+          </tbody>
+        </table>
+
+        <h3>③ Enrollments(수강) 테이블이다. (관계만 남긴다)</h3>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>student_id (PK, FK)</th>
+              <th>course_name (PK, FK)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>1</td><td>SQL</td></tr>
+            <tr><td>1</td><td>Python</td></tr>
+            <tr><td>2</td><td>SQL</td></tr>
+            <tr><td>3</td><td>Python</td></tr>
+            <tr><td>3</td><td>Excel</td></tr>
+          </tbody>
+        </table>
+
+        <div class="note">
+          <strong>정리</strong> 2NF까지 오면 “학생 이름/강사 정보” 중복이 많이 줄어든다.
+        </div>
+      </div>
+    </section>
+
+    <section id="norm-3nf" class="section">
+      <h2>16. 3NF(제3정규형)</h2>
+      <div class="card">
+        <div class="note">
+          <strong>3NF 규칙</strong> 2NF를 만족한 상태에서, 기본키가 아닌 컬럼이 다른 컬럼에 의해 결정되면 분리한다.
+        </div>
+
+        <h3>이 예시에서의 “이행 종속(Transitive Dependency)”</h3>
+        <ul class="list">
+          <li>2NF의 Courses_2NF 테이블에는 (course_name, instructor_name, instructor_phone)이 있다.</li>
+          <li>그런데 instructor_phone은 course_name이 아니라 <b>instructor_name</b>으로 결정된다.</li>
+          <li>즉, course_name → instructor_name → instructor_phone 구조가 된다.</li>
+        </ul>
+
+        <div class="note">
+          <strong>핵심</strong> 강사 전화번호는 “강사”의 속성이므로 Instructors 테이블로 분리하는 것이 자연스럽다.
+        </div>
+      </div>
+    </section>
+
+    <section id="norm-3nf-data" class="section">
+      <h2>16-1. 3NF 실제 분리 결과를 그대로 다 보여준다</h2>
+      <div class="card">
+        <p class="foot">아래 4개 테이블이 3NF 결과이다. 데이터도 실제로 옮겨 담은 결과이다.</p>
+
+        <h3>① Students(학생) 테이블이다.</h3>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>student_id (PK)</th>
+              <th>student_name</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>1</td><td>철수</td></tr>
+            <tr><td>2</td><td>영희</td></tr>
+            <tr><td>3</td><td>민수</td></tr>
+          </tbody>
+        </table>
+
+        <h3>② Instructors(강사) 테이블이다.</h3>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>instructor_name (PK)</th>
+              <th>instructor_phone</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>김강사</td><td>010-1111</td></tr>
+            <tr><td>박강사</td><td>010-2222</td></tr>
+            <tr><td>최강사</td><td>010-3333</td></tr>
+          </tbody>
+        </table>
+
+        <h3>③ Courses(강좌) 테이블이다. (강사 전화는 빠지고, 강사명만 FK처럼 남는다)</h3>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>course_name (PK)</th>
+              <th>instructor_name (FK)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>SQL</td><td>김강사</td></tr>
+            <tr><td>Python</td><td>박강사</td></tr>
+            <tr><td>Excel</td><td>최강사</td></tr>
+          </tbody>
+        </table>
+
+        <h3>④ Enrollments(수강) 테이블이다.</h3>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>student_id (PK, FK)</th>
+              <th>course_name (PK, FK)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>1</td><td>SQL</td></tr>
+            <tr><td>1</td><td>Python</td></tr>
+            <tr><td>2</td><td>SQL</td></tr>
+            <tr><td>3</td><td>Python</td></tr>
+            <tr><td>3</td><td>Excel</td></tr>
+          </tbody>
+        </table>
+
+        <div class="note">
+          <strong>정리</strong> 3NF까지 하면 “강사 전화번호 변경”은 Instructors 한 곳만 수정하면 된다.
+        </div>
+      </div>
+    </section>
+
+    <section id="norm-final" class="section">
+      <h2>17. 최종 정규화 결과(테이블 4개) SQL 구현이다</h2>
+      <div class="card">
+        <p>최종 구조는 Students / Instructors / Courses / Enrollments 4개 테이블이다.</p>
+
+        <pre><code>-- CREATE: DB/테이블을 만든다.
+CREATE DATABASE IF NOT EXISTS academy;
+USE academy;
+
+-- 1) Students 이다.
+CREATE TABLE IF NOT EXISTS Students (
+  student_id   INT NOT NULL,
+  student_name VARCHAR(30) NOT NULL,
+  PRIMARY KEY (student_id)
+);
+
+-- 2) Instructors 이다.
+CREATE TABLE IF NOT EXISTS Instructors (
+  instructor_name  VARCHAR(30) NOT NULL,
+  instructor_phone VARCHAR(30),
+  PRIMARY KEY (instructor_name)
+);
+
+-- 3) Courses 이다.
+CREATE TABLE IF NOT EXISTS Courses (
+  course_name      VARCHAR(30) NOT NULL,
+  instructor_name  VARCHAR(30) NOT NULL,
+  PRIMARY KEY (course_name),
+  CONSTRAINT fk_course_instructor
+    FOREIGN KEY (instructor_name) REFERENCES Instructors(instructor_name)
+    ON UPDATE CASCADE
+    ON DELETE RESTRICT
+);
+
+-- 4) Enrollments 이다.
+CREATE TABLE IF NOT EXISTS Enrollments (
+  student_id  INT NOT NULL,
+  course_name VARCHAR(30) NOT NULL,
+  PRIMARY KEY (student_id, course_name),
+  CONSTRAINT fk_enroll_student
+    FOREIGN KEY (student_id) REFERENCES Students(student_id)
+    ON UPDATE CASCADE
+    ON DELETE CASCADE,
+  CONSTRAINT fk_enroll_course
+    FOREIGN KEY (course_name) REFERENCES Courses(course_name)
+    ON UPDATE CASCADE
+    ON DELETE RESTRICT
+);</code></pre>
+
+        <div class="note">
+          <strong>추가 팁</strong> Enrollments처럼 “관계 자체”를 저장하는 테이블은 복합 PK(student_id, course_name)가 자주 등장한다.
+        </div>
+      </div>
+    </section>
+
+    <section id="join-preview" class="section">
+      <h2>18. 정규화 후 조회는 JOIN으로 다시 합치는 것이다</h2>
+      <div class="card">
+        <p>
+          정규화하면 테이블이 여러 개로 나뉘지만, 조회할 때는 JOIN으로 다시 합쳐서 “원래 표처럼” 볼 수 있다.
+        </p>
+
+        <pre><code>SELECT
+  s.student_id,
+  s.student_name,
+  e.course_name,
+  c.instructor_name,
+  i.instructor_phone
+FROM Enrollments e
+JOIN Students s
+  ON e.student_id = s.student_id
+JOIN Courses c
+  ON e.course_name = c.course_name
+JOIN Instructors i
+  ON c.instructor_name = i.instructor_name
+ORDER BY s.student_id, e.course_name;</code></pre>
+
+        <div class="note">
+          <strong>정리</strong> 설계는 “쪼개서 안전하게”, 조회는 “JOIN으로 보기 쉽게” 하는 방식이다.
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="container">
+        <div class="foot">
+          구성: ERD 개념/실습/DDL 흐름 + PK/FK 개념 + 정규화(0NF→1NF→2NF→3NF) + 실제 분리 데이터 표 + 최종 테이블 구현 + JOIN 복원이다.
+        </div>
+      </div>
+    </footer>
+
+  </main>
+</body>
+</html>

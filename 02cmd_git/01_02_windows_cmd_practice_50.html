@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Windows CMD 실습문제 50문제 + 정답</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="container">
+      <h1 class="title">Windows CMD 실습문제 50문제 + 정답</h1>
+      <p class="subtitle">
+        디렉토리/파일 관리, 복사/이동, 네트워크 확인, 리다이렉션을 한 번에 연습하는 실습 세트이다.
+      </p>
+
+      <nav class="toc" aria-label="목차">
+        <a href="#dir">📂 디렉토리 생성/삭제</a>
+        <a href="#file">📄 파일 생성/삭제/조회</a>
+        <a href="#copy">📂 파일 복사/이동</a>
+        <a href="#net">🌐 네트워크/IP 확인</a>
+        <a href="#redir">🔄 리다이렉션 활용</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <section id="dir" class="section">
+      <h2>📂 디렉토리 생성/삭제</h2>
+
+      <div class="card">
+        <h3>1번</h3>
+        <p>현재 위치에 <code>test</code> 폴더를 생성하시오.</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>mkdir test</code></pre></details>
+      </div>
+
+      <div class="card">
+        <h3>2번</h3>
+        <p><code>test</code> 폴더 안에 <code>sub1</code>과 <code>sub2</code> 폴더를 한 번에 생성하시오.</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>mkdir test\sub1 test\sub2</code></pre></details>
+      </div>
+
+      <div class="card">
+        <h3>3번</h3>
+        <p><code>test</code> 폴더 안으로 들어가시오.</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>cd test</code></pre></details>
+      </div>
+
+      <div class="card">
+        <h3>4번</h3>
+        <p>상위 디렉토리로 이동하시오.</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>cd ..</code></pre></details>
+      </div>
+
+      <div class="card">
+        <h3>5번</h3>
+        <p>절대경로 <code>C:\Windows</code>로 이동하시오.</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>cd C:\Windows</code></pre></details>
+      </div>
+
+      <div class="card">
+        <h3>6번</h3>
+        <p>상대경로를 이용해 현재 폴더의 <code>sub1</code> 디렉토리로 이동하시오.</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>cd ..\test\sub1</code></pre></details>
+      </div>
+
+      <div class="card">
+        <h3>7번</h3>
+        <p><code>rd</code> 명령어로 빈 <code>sub2</code> 폴더를 삭제하시오.</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>rd ..\sub2</code></pre></details>
+      </div>
+
+      <div class="card">
+        <h3>8번</h3>
+        <p><code>rmdir /s /q</code>로 <code>test</code> 폴더와 안의 모든 내용을 삭제하시오.</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>cd c:\
+rmdir /s /q test</code></pre></details>
+        <div class="note"><strong>주의</strong> 이 명령은 하위 폴더/파일까지 강제 삭제하므로 경로를 반드시 확인해야 한다.</div>
+      </div>
+
+      <div class="card">
+        <h3>9번</h3>
+        <p>현재 디렉토리 경로를 확인하시오.</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>cd</code></pre></details>
+      </div>
+
+      <div class="card">
+        <h3>10번</h3>
+        <p>2번의 작업을 다시 실행하고 <code>test</code> 디렉토리 구조를 트리 형태로 출력하시오.</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>mkdir test\sub1 test\sub2
+tree test</code></pre></details>
+      </div>
+    </section>
+
+    <section id="file" class="section">
+      <h2>📄 파일 생성/삭제/조회</h2>
+
+      <div class="card">
+        <h3>11번</h3>
+        <p><code>test</code> 디렉토리 안에 <code>a.txt</code>를 생성하고 <code>Hello</code>를 저장하시오.</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>echo Hello &gt; a.txt</code></pre></details>
+      </div>
+
+      <div class="card">
+        <h3>12번</h3>
+        <p><code>a.txt</code> 파일에 <code>World</code>를 추가하시오.</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>echo World &gt;&gt; a.txt</code></pre></details>
+      </div>
+
+      <div class="card">
+        <h3>13번</h3>
+        <p><code>a.txt</code> 내용을 화면에 출력하시오.</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>type a.txt</code></pre></details>
+      </div>
+
+      <div class="card">
+        <h3>14번</h3>
+        <p><code>copy con b.txt</code>로 직접 입력하여 <code>b.txt</code>를 만드시오. (Ctrl+Z 후 Enter)</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>copy con b.txt</code></pre></details>
+      </div>
+
+      <div class="card">
+        <h3>15번</h3>
+        <p><code>a.txt</code>의 이름을 <code>c.txt</code>로 변경하시오.</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>rename a.txt c.txt</code></pre></details>
+      </div>
+
+      <div class="card">
+        <h3>16번</h3>
+        <p><code>c.txt</code> 파일을 삭제하시오.</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>del c.txt</code></pre></details>
+      </div>
+
+      <div class="card">
+        <h3>17번</h3>
+        <p><code>d.txt</code>를 생성하고 <code>CMD TEST</code>를 넣으시오.</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>echo CMD TEST &gt; d.txt</code></pre></details>
+      </div>
+
+      <div class="card">
+        <h3>18번</h3>
+        <p><code>type</code> 명령어로 <code>d.txt</code> 내용을 확인하시오.</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>type d.txt</code></pre></details>
+      </div>
+
+      <div class="card">
+        <h3>19번</h3>
+        <p><code>dir</code>로 현재 폴더의 파일과 디렉토리 목록을 확인하시오.</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>dir</code></pre></details>
+      </div>
+
+      <div class="card">
+        <h3>20번</h3>
+        <p><code>dir /w</code> 옵션을 사용해 가로로 출력하시오.</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>dir /w</code></pre></details>
+      </div>
+    </section>
+
+    <section id="copy" class="section">
+      <h2>📂 파일 복사/이동</h2>
+
+      <div class="card">
+        <h3>21번</h3>
+        <p><code>d.txt</code>를 복사해 <code>e.txt</code>를 만드시오.</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>copy d.txt e.txt</code></pre></details>
+      </div>
+
+      <div class="card">
+        <h3>22번</h3>
+        <p><code>e.txt</code>를 <code>sub1</code> 폴더로 이동하시오.</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>move e.txt sub1\</code></pre></details>
+      </div>
+
+      <div class="card">
+        <h3>23번</h3>
+        <p><code>sub1\e.txt</code>를 복사해 <code>f.txt</code>를 만드시오.</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>copy sub1\e.txt f.txt</code></pre></details>
+      </div>
+
+      <div class="card">
+        <h3>24번</h3>
+        <p><code>f.txt</code>를 상위 디렉토리로 이동하시오.</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>move f.txt ..\</code></pre></details>
+      </div>
+
+      <div class="card">
+        <h3>25번</h3>
+        <p><code>xcopy</code>로 <code>sub1</code> 폴더를 <code>backup</code>으로 하위 포함 복사하시오.</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>xcopy sub1 backup /e</code></pre></details>
+      </div>
+
+      <div class="card">
+        <h3>26번</h3>
+        <p><code>robocopy</code>로 <code>sub1</code> 폴더를 <code>backup2</code>에 복사하시오.</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>robocopy sub1 backup2 /e</code></pre></details>
+      </div>
+
+      <div class="card">
+        <h3>27번</h3>
+        <p>이동한 파일 <code>sub1\e.txt</code>를 삭제하시오.</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>del sub1\e.txt</code></pre></details>
+      </div>
+
+      <div class="card">
+        <h3>28번</h3>
+        <p><code>d.txt</code>를 복사해 <code>sub1\g.txt</code>를 생성하시오.</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>copy d.txt sub1\g.txt</code></pre></details>
+      </div>
+
+      <div class="card">
+        <h3>29번</h3>
+        <p><code>dir</code>로 <code>sub1</code> 폴더의 파일 목록을 확인하시오.</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>dir sub1</code></pre></details>
+      </div>
+
+      <div class="card">
+        <h3>30번</h3>
+        <p><code>tree /f</code>로 현재 폴더 구조와 파일까지 출력하시오.</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>tree /f</code></pre></details>
+      </div>
+    </section>
+
+    <section id="net" class="section">
+      <h2>🌐 네트워크/IP 확인</h2>
+
+      <div class="card">
+        <h3>31번</h3>
+        <p>IP 주소 정보를 확인하시오.</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>ipconfig</code></pre></details>
+      </div>
+
+      <div class="card">
+        <h3>32번</h3>
+        <p>네트워크 어댑터의 모든 세부 정보를 확인하시오.</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>ipconfig /all</code></pre></details>
+      </div>
+
+      <div class="card">
+        <h3>33번</h3>
+        <p>Google 서버에 <code>ping</code>을 보내 연결을 테스트하시오.</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>ping www.google.com</code></pre></details>
+      </div>
+
+      <div class="card">
+        <h3>34번</h3>
+        <p>현재 컴퓨터 이름을 확인하시오.</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>hostname</code></pre></details>
+      </div>
+
+      <div class="card">
+        <h3>35번</h3>
+        <p>현재 사용자 이름을 출력하시오.</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>echo %username%</code></pre></details>
+      </div>
+
+      <div class="card">
+        <h3>36번</h3>
+        <p>현재 컴퓨터 이름을 출력하시오.</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>echo %computername%</code></pre></details>
+      </div>
+
+      <div class="card">
+        <h3>37번</h3>
+        <p>현재 시간과 날짜를 확인하시오.</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>time
+date</code></pre></details>
+      </div>
+
+      <div class="card">
+        <h3>38번</h3>
+        <p>Windows 버전을 확인하시오.</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>ver</code></pre></details>
+      </div>
+
+      <div class="card">
+        <h3>39번</h3>
+        <p>시스템 정보를 확인하시오.</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>systeminfo</code></pre></details>
+      </div>
+
+      <div class="card">
+        <h3>40번</h3>
+        <p>현재 경로를 확인한 뒤, 그 결과를 화면과 동시에 파일로 저장하시오.</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>cd
+cd &gt; path.txt</code></pre></details>
+        <div class="note"><strong>참고</strong> 원문 그대로라 2줄로 제공되어 있다. “화면과 동시에”까지 완벽히 하려면 <code>tee</code> 같은 도구가 필요하지만, 기본 CMD 범위에서는 보통 이렇게 파일 저장을 연습한다.</div>
+      </div>
+    </section>
+
+    <section id="redir" class="section">
+      <h2>🔄 리다이렉션 활용</h2>
+
+      <div class="card">
+        <h3>41번</h3>
+        <p>현재 디렉토리 목록을 <code>files.txt</code>에 저장하시오.</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>dir &gt; files.txt</code></pre></details>
+      </div>
+
+      <div class="card">
+        <h3>42번</h3>
+        <p>IP 정보를 <code>ip.txt</code>에 저장하시오.</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>ipconfig &gt; ip.txt</code></pre></details>
+      </div>
+
+      <div class="card">
+        <h3>43번</h3>
+        <p><code>files.txt</code>에 <code>Test</code>라는 문장을 추가하시오.</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>echo Test &gt;&gt; files.txt</code></pre></details>
+      </div>
+
+      <div class="card">
+        <h3>44번</h3>
+        <p><code>files.txt</code>에 저장된 내용을 확인하시오.</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>type files.txt</code></pre></details>
+      </div>
+
+      <div class="card">
+        <h3>45번</h3>
+        <p>디렉토리 구조를 <code>tree.txt</code>에 저장하시오.</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>tree &gt; tree.txt</code></pre></details>
+      </div>
+
+      <div class="card">
+        <h3>46번</h3>
+        <p><code>ping</code> 결과를 <code>ping.txt</code>에 저장하시오.</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>ping www.google.com &gt; ping.txt</code></pre></details>
+      </div>
+
+      <div class="card">
+        <h3>47번</h3>
+        <p>빈 파일 <code>empty.txt</code>를 생성하시오.</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>type nul &gt; empty.txt</code></pre></details>
+      </div>
+
+      <div class="card">
+        <h3>48번</h3>
+        <p><code>copy con notes.txt</code>로 <code>notes.txt</code>를 만들고 내용을 입력하시오. (Ctrl+Z로 종료)</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>copy con notes.txt</code></pre></details>
+      </div>
+
+      <div class="card">
+        <h3>49번</h3>
+        <p><code>log.txt</code>에 디렉토리 목록을 누적 저장하시오.</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>dir &gt;&gt; log.txt</code></pre></details>
+      </div>
+
+      <div class="card">
+        <h3>50번</h3>
+        <p><code>log.txt</code>에 최종 저장된 내용을 확인하시오.</p>
+        <details><summary>정답 CMD 보기</summary><pre><code>type log.txt</code></pre></details>
+      </div>
+
+      <div class="note">
+        <strong>학습 팁</strong> 41~50번은 “결과를 파일로 남기기(로그)”를 연습하는 파트이다. <code>&gt;</code>는 덮어쓰기, <code>&gt;&gt;</code>는 추가 저장이다.
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div>
+        <div><strong>출처</strong>: 업로드된 PDF의 문제/정답을 HTML로 재구성한 문서이다.</div>
+      </div>
+    </footer>
+  </main>
+</body>
+</html>

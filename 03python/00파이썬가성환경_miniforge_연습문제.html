@@ -1,0 +1,615 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Miniforge(Conda) 연습문제 — 실습으로 완전정복 (Windows CMD)</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="container">
+      <div class="badge">실습 문제 세트 · Windows CMD 기준</div>
+      <h1 class="title">Miniforge(Conda) 연습문제 — conda·mamba·pip·채널·이식까지</h1>
+      <p class="subtitle">
+        이 문서는 강의안 내용 전체(가상환경, conda/mamba/pip 설치, 채널 strict, 환경 내보내기/재현, conda-pack, 트러블슈팅)를
+        <strong>Windows CMD</strong>에서 그대로 실습할 수 있도록 구성한 연습문제이다.
+        각 문제는 <strong>정답을 숨김(details)</strong> 형태로 포함한다.
+      </p>
+
+      <nav class="toc" aria-label="목차">
+        <a href="#prep">실습 준비</a>
+        <a href="#a">A. 가상환경 기본</a>
+        <a href="#b">B. conda vs mamba</a>
+        <a href="#c">C. 채널과 strict</a>
+        <a href="#d">D. pip 혼합 운영</a>
+        <a href="#e">E. 환경 내보내기/재현</a>
+        <a href="#f">F. conda-pack 이식</a>
+        <a href="#g">G. 점검/트러블슈팅</a>
+        <a href="#h">H. 미니 프로젝트</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- ================= 준비 ================= -->
+    <section class="section" id="prep">
+      <h2>실습 준비</h2>
+
+      <div class="card">
+        <h3>공통 전제</h3>
+        <ul class="list">
+          <li>Miniforge가 설치되어 있다고 가정한다.</li>
+          <li>실습은 <strong>Windows CMD</strong>(또는 “Miniforge Prompt”)에서 진행한다.</li>
+          <li>실습 폴더를 하나 만든다: <code>conda_lab</code></li>
+          <li>이 문서의 패키지 확인은 <strong>python -c</strong> 같은 방식 없이, <strong>conda list</strong>로만 한다.</li>
+          <li>conda-pack 압축 해제는 <strong>tar</strong>를 쓰지 않고 <strong>압축 프로그램(예: 7-Zip)</strong>으로 한다.</li>
+        </ul>
+
+        <details class="details">
+          <summary>정답(예시) 보기</summary>
+          <div class="details-body">
+            <pre><code>mkdir conda_lab
+cd conda_lab</code></pre>
+          </div>
+        </details>
+
+        <div class="note">
+          <strong>요리 비유</strong>
+          프로젝트마다 “중화요리 주방(웍+센불)”과 “화덕피자 주방(화덕+숙성)”처럼
+          조리 방식/재료/장비가 다르다. 실습에서 환경(environment)은 전용 주방이다.
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= A ================= -->
+    <section class="section" id="a">
+      <h2>A. 가상환경(주방) 기본 실습</h2>
+
+      <div class="card">
+        <h3>1번. “주방 목록” 확인하기</h3>
+        <p class="p">
+          현재 PC에 존재하는 conda 환경 목록을 확인하고,
+          base가 자동 활성화되는지 여부도 확인하라.
+        </p>
+        <ul class="list">
+          <li>환경 목록 출력</li>
+          <li>auto_activate_base 설정 확인</li>
+        </ul>
+
+        <details class="details">
+          <summary>정답 보기(숨김)</summary>
+          <div class="details-body">
+            <pre><code>conda env list
+conda config --show auto_activate_base</code></pre>
+          </div>
+        </details>
+      </div>
+
+      <div class="card">
+        <h3>2번. 중화요리 주방(A) 만들기</h3>
+        <p class="p">
+          이름이 <code>wok-kitchen</code>인 환경을 만들고 Python 3.10을 설치하라.
+          설치 확인은 <strong>conda list</strong>로 하라.
+        </p>
+        <details class="details">
+          <summary>정답 보기(숨김)</summary>
+          <div class="details-body">
+            <pre><code>conda create -n wok-kitchen python=3.10
+conda activate wok-kitchen
+conda list python</code></pre>
+            <div class="hint">
+              <strong>체크</strong> python 항목의 버전이 3.10.x이면 통과이다.
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <div class="card">
+        <h3>3번. 화덕피자 주방(B) 만들기</h3>
+        <p class="p">
+          이름이 <code>pizza-oven</code>인 환경을 만들고 Python 3.12를 설치하라.
+          설치 확인은 <strong>conda list</strong>로 하라.
+        </p>
+        <details class="details">
+          <summary>정답 보기(숨김)</summary>
+          <div class="details-body">
+            <pre><code>conda create -n pizza-oven python=3.12
+conda activate pizza-oven
+conda list python</code></pre>
+            <div class="hint">
+              <strong>체크</strong> python 항목의 버전이 3.12.x이면 통과이다.
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <div class="card">
+        <h3>4번. “현재 내가 어느 주방인지” 확인하기</h3>
+        <p class="p">
+          <code>wok-kitchen</code>을 활성화한 뒤,
+          현재 사용 중인 <strong>python 패키지 버전</strong>과 <strong>pip 패키지 버전</strong>을
+          <strong>conda list</strong>로 확인하라.
+        </p>
+
+        <details class="details">
+          <summary>정답 보기(숨김)</summary>
+          <div class="details-body">
+            <pre><code>conda activate wok-kitchen
+conda list python
+conda list pip</code></pre>
+            <div class="hint">
+              <strong>체크</strong> 목록이 wok-kitchen에서 출력되고, python/pip 버전이 보이면 통과이다.
+            </div>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <!-- ================= B ================= -->
+    <section class="section" id="b">
+      <h2>B. conda vs mamba 설치 실습</h2>
+
+      <div class="card">
+        <h3>5번. mamba 설치하기(관리 주방에서)</h3>
+        <p class="p">
+          base(또는 관리용 환경)에서 mamba를 설치하라. 설치 확인은 conda list로 하라.
+        </p>
+
+        <details class="details">
+          <summary>정답 보기(숨김)</summary>
+          <div class="details-body">
+            <pre><code>conda install -c conda-forge mamba
+conda list mamba</code></pre>
+          </div>
+        </details>
+      </div>
+
+      <div class="card">
+        <h3>6번. wok-kitchen에 conda로 패키지 설치</h3>
+        <p class="p">
+          <code>wok-kitchen</code>에서 conda로 다음을 설치하라: numpy, pandas, matplotlib.
+          설치 확인은 conda list로 하라.
+        </p>
+
+        <details class="details">
+          <summary>정답 보기(숨김)</summary>
+          <div class="details-body">
+            <pre><code>conda activate wok-kitchen
+conda install -c conda-forge numpy pandas matplotlib
+
+conda list numpy
+conda list pandas
+conda list matplotlib</code></pre>
+          </div>
+        </details>
+      </div>
+
+      <div class="card">
+        <h3>7번. pizza-oven에 mamba로 패키지 설치</h3>
+        <p class="p">
+          <code>pizza-oven</code>에서 mamba로 numpy, pandas, matplotlib를 설치하라.
+          설치 확인은 conda list로 하라.
+        </p>
+
+        <details class="details">
+          <summary>정답 보기(숨김)</summary>
+          <div class="details-body">
+            <pre><code>conda activate pizza-oven
+mamba install -c conda-forge numpy pandas matplotlib
+
+conda list numpy
+conda list pandas
+conda list matplotlib</code></pre>
+          </div>
+        </details>
+      </div>
+
+      <div class="card">
+        <h3>8번. 패키지 “출처(채널)” 표시하기</h3>
+        <p class="p">
+          패키지가 어느 채널에서 설치되었는지 보이도록 설정을 켜고,
+          conda list에서 확인하라.
+        </p>
+
+        <details class="details">
+          <summary>정답 보기(숨김)</summary>
+          <div class="details-body">
+            <pre><code>conda config --set show_channel_urls true
+conda list numpy</code></pre>
+            <div class="hint">
+              <strong>체크</strong> 출력에 conda-forge 같은 채널 정보가 보이면 통과이다.
+            </div>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <!-- ================= C ================= -->
+    <section class="section" id="c">
+      <h2>C. 채널(channel)과 strict 우선순위 실습</h2>
+
+      <div class="card">
+        <h3>9번. 채널 목록과 strict 확인하기</h3>
+        <p class="p">
+          현재 채널 목록과 channel_priority 값을 확인하고, strict가 아니라면 strict로 설정하라.
+        </p>
+
+        <details class="details">
+          <summary>정답 보기(숨김)</summary>
+          <div class="details-body">
+            <pre><code>conda config --show channels
+conda config --show channel_priority
+
+conda config --set channel_priority strict
+conda config --show channel_priority</code></pre>
+          </div>
+        </details>
+      </div>
+
+      <div class="card">
+        <h3>10번. “한 공급처 원칙” 점검하기</h3>
+        <p class="p">
+          <code>wok-kitchen</code>에서 설치된 핵심 패키지가 conda-forge 중심으로 들어왔는지
+          conda list 출력으로 확인하라.
+        </p>
+
+        <details class="details">
+          <summary>정답 보기(숨김)</summary>
+          <div class="details-body">
+            <pre><code>conda activate wok-kitchen
+conda list numpy
+conda list pandas
+conda list matplotlib</code></pre>
+            <div class="hint">
+              <strong>체크</strong> 채널 표시가 켜져 있다면, channel이 conda-forge로 보이면 통과이다.
+            </div>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <!-- ================= D ================= -->
+    <section class="section" id="d">
+      <h2>D. pip 혼합 운영 실습</h2>
+
+      <div class="card">
+        <h3>11번. conda 환경에서 pip로 설치하기</h3>
+        <p class="p">
+          <code>wok-kitchen</code>에서 pip로 fastapi와 uvicorn을 설치하라.
+          설치 확인은 conda list로 하라.
+        </p>
+
+        <details class="details">
+          <summary>정답 보기(숨김)</summary>
+          <div class="details-body">
+            <pre><code>conda activate wok-kitchen
+pip install fastapi uvicorn
+
+conda list fastapi
+conda list uvicorn</code></pre>
+            <div class="hint">
+              <strong>체크</strong> conda list에 fastapi/uvicorn이 보이면 통과이다(채널 표시는 달라질 수 있다).
+            </div>
+          </div>
+        </details>
+
+        <div class="warn">
+          <strong>주의</strong>
+          pip로 설치한 패키지는 conda의 바이너리 조합을 깨는 경우가 있다.
+          실무에서는 “conda로 최대한 설치하고, 꼭 필요한 것만 pip”가 기본 전략이다.
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>12번. pip 설치 목록이 환경 내보내기에 포함되는지 확인하기</h3>
+        <p class="p">
+          pip로 설치한 fastapi/uvicorn이 environment.yml에 반영되는지 확인하라.
+          (내보내기 파일 생성까지 수행하라.)
+        </p>
+
+        <details class="details">
+          <summary>정답 보기(숨김)</summary>
+          <div class="details-body">
+            <pre><code>conda activate wok-kitchen
+conda env export -n wok-kitchen --no-builds &gt; environment.yml
+
+REM 생성된 environment.yml 파일을 텍스트 편집기로 열어 pip 섹션이 있는지 확인한다.</code></pre>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <!-- ================= E ================= -->
+    <section class="section" id="e">
+      <h2>E. 환경 내보내기/재현 실습(environment.yml)</h2>
+
+      <div class="card">
+        <h3>13번. wok-kitchen을 environment.yml로 내보내기</h3>
+        <p class="p">
+          <code>--no-builds</code> 옵션을 사용해 이식성을 높여 내보내라.
+        </p>
+
+        <details class="details">
+          <summary>정답 보기(숨김)</summary>
+          <div class="details-body">
+            <pre><code>conda env export -n wok-kitchen --no-builds &gt; environment.yml</code></pre>
+          </div>
+        </details>
+      </div>
+
+      <div class="card">
+        <h3>14번. environment.yml로 새 환경 재현하기</h3>
+        <p class="p">
+          environment.yml로 환경을 재현하되, 기존 wok-kitchen과 충돌하지 않도록
+          <strong>새 이름</strong>으로 재현하라.
+          (힌트: yml 파일의 name을 바꾸거나, 파일을 복사해서 name만 바꾼다.)
+          확인은 conda env list와 conda list로만 하라.
+        </p>
+
+        <details class="details">
+          <summary>정답 보기(숨김)</summary>
+          <div class="details-body">
+            <pre><code>REM 1) environment.yml을 복사한다.
+copy environment.yml environment.clone.yml
+
+REM 2) environment.clone.yml을 열어서 name: wok-kitchen 을 name: wok-kitchen-clone 으로 바꾼다.
+
+REM 3) 새 환경을 만든다.
+conda env create -f environment.clone.yml
+
+REM 4) 목록 확인이다.
+conda env list
+
+REM 5) 설치 확인이다.
+conda activate wok-kitchen-clone
+conda list numpy
+conda list pandas
+conda list matplotlib</code></pre>
+            <div class="hint">
+              <strong>체크</strong> wok-kitchen-clone 환경이 생성되고, 주요 패키지가 conda list에 보이면 통과이다.
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <div class="card">
+        <h3>15번. from-history로 “가볍게” 내보내기</h3>
+        <p class="p">
+          직접 설치한 패키지 중심으로 내보내고, 파일이 생성되었는지 확인하라.
+          (파일 비교는 텍스트 편집기로 직접 확인한다.)
+        </p>
+
+        <details class="details">
+          <summary>정답 보기(숨김)</summary>
+          <div class="details-body">
+            <pre><code>conda env export -n wok-kitchen --from-history &gt; environment.from-history.yml
+
+REM environment.yml과 environment.from-history.yml을 열어 내용이 어떻게 달라졌는지 확인한다.</code></pre>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <!-- ================= F ================= -->
+    <section class="section" id="f">
+      <h2>F. conda-pack으로 환경 통째 이식 실습(Windows · tar 없이)</h2>
+
+      <div class="card">
+        <h3>16번. conda-pack 설치</h3>
+        <p class="p">
+          conda-forge에서 conda-pack을 설치하라. 설치 확인은 conda list로 하라.
+        </p>
+
+        <details class="details">
+          <summary>정답 보기(숨김)</summary>
+          <div class="details-body">
+            <pre><code>conda install -c conda-forge conda-pack
+conda list conda-pack</code></pre>
+          </div>
+        </details>
+      </div>
+
+      <div class="card">
+        <h3>17번. wok-kitchen을 zip로 패킹하기</h3>
+        <p class="p">
+          환경을 <code>wok-kitchen.zip</code> 파일로 패킹하고, 파일이 생성되었는지 확인하라.
+          (Windows는 zip이 다루기 편하다.)
+        </p>
+
+        <details class="details">
+          <summary>정답 보기(숨김)</summary>
+          <div class="details-body">
+            <pre><code>conda pack -n wok-kitchen -o wok-kitchen.zip
+dir</code></pre>
+          </div>
+        </details>
+      </div>
+
+      <div class="card">
+        <h3>18번. zip 압축 해제(7-Zip 등) + conda-unpack 실행</h3>
+        <p class="p">
+          <strong>tar를 사용하지 말고</strong>, 7-Zip 같은 압축 프로그램으로
+          <code>packed_env\wok-kitchen</code> 폴더에 압축을 해제하라.
+          해제 후 <code>conda-unpack</code>을 실행하라.
+          (확인은 conda list로만 하라.)
+        </p>
+
+        <details class="details">
+          <summary>정답 보기(숨김)</summary>
+          <div class="details-body">
+            <pre><code>REM 1) 폴더 생성이다.
+mkdir packed_env
+mkdir packed_env\wok-kitchen
+
+REM 2) 7-Zip(또는 WinRAR)로 wok-kitchen.zip을
+REM    packed_env\wok-kitchen 폴더에 "압축 해제" 한다.
+REM    (CMD로 해제하지 않는다.)
+
+REM 3) 최초 1회 경로 보정이다(Windows는 Scripts에 있다).
+packed_env\wok-kitchen\Scripts\conda-unpack.exe
+
+REM 4) 확인: packed_env\wok-kitchen 안의 conda-meta를 보고 설치목록을 확인한다.
+REM    (conda 자체로 이 packed_env 폴더를 '환경'으로 인식시키는 방식은 다양하므로,
+REM     이 실습에서는 conda-unpack 실행 성공을 우선 체크한다.)
+REM    실무에서는 conda-pack 문서의 활성화 방법을 따라 경로를 등록한다.</code></pre>
+            <div class="hint">
+              <strong>체크</strong> conda-unpack 실행이 오류 없이 끝나면 통과이다.
+            </div>
+          </div>
+        </details>
+
+        <div class="warn">
+          <strong>주의</strong>
+          conda-pack은 “동일 OS/아키텍처”에서 통째 복제에 적합하다.
+          Windows↔Linux처럼 플랫폼이 바뀌면 environment.yml 방식이 일반적으로 더 낫다.
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= G ================= -->
+    <section class="section" id="g">
+      <h2>G. 점검/트러블슈팅 실습(확인은 conda list 중심)</h2>
+
+      <div class="card">
+        <h3>19번. 환경이 활성화되어도 패키지가 안 보이는 상황 점검하기</h3>
+        <p class="p">
+          활성화한 환경에서 numpy가 설치되어 있는지 conda list로 확인하라.
+          만약 출력이 없다면, 해당 환경이 맞는지(activate를 다시) 점검하라.
+        </p>
+
+        <details class="details">
+          <summary>정답 보기(숨김)</summary>
+          <div class="details-body">
+            <pre><code>conda activate wok-kitchen
+conda list numpy
+
+REM numpy가 안 보이면, 환경이 제대로 활성화되었는지 다시 확인한다.
+conda env list</code></pre>
+          </div>
+        </details>
+      </div>
+
+      <div class="card">
+        <h3>20번. 캐시/불필요 파일 정리하기</h3>
+        <p class="p">
+          conda 캐시를 정리하고, 어떤 옵션이 있는지 확인하라.
+          (주의: clean은 되돌리기 어렵다.)
+        </p>
+
+        <details class="details">
+          <summary>정답 보기(숨김)</summary>
+          <div class="details-body">
+            <pre><code>conda clean -h
+conda clean --all</code></pre>
+          </div>
+        </details>
+      </div>
+
+      <div class="card">
+        <h3>21번. 환경 삭제 및 재생성</h3>
+        <p class="p">
+          <code>pizza-oven</code> 환경을 삭제한 뒤 동일한 이름으로 다시 만들고,
+          패키지를 설치한 다음 conda list로 확인하라.
+        </p>
+
+        <details class="details">
+          <summary>정답 보기(숨김)</summary>
+          <div class="details-body">
+            <pre><code>conda remove -n pizza-oven --all
+
+mamba create -n pizza-oven python=3.12
+conda activate pizza-oven
+mamba install -c conda-forge numpy pandas matplotlib
+
+conda list python
+conda list numpy
+conda list pandas
+conda list matplotlib</code></pre>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <!-- ================= H ================= -->
+    <section class="section" id="h">
+      <h2>H. 미니 프로젝트(종합)</h2>
+
+      <div class="card">
+        <h3>22번. “중식 주방 vs 화덕피자 주방” 환경 비교 보고서 만들기</h3>
+        <p class="p">
+          아래 요구사항을 만족하는 짧은 보고서를 <code>conda_lab\report.txt</code>로 작성하라.
+          정보 확인은 <strong>conda list / conda env list / conda config</strong>로만 수행하라.
+        </p>
+        <ul class="list">
+          <li>wok-kitchen과 pizza-oven 각각의 python 버전(= conda list python)</li>
+          <li>각 환경에 설치된 numpy 버전(= conda list numpy)</li>
+          <li>wok-kitchen에 pip로 설치한 fastapi/uvicorn 존재 여부(= conda list fastapi, conda list uvicorn)</li>
+          <li>채널/strict 설정 상태(= conda config --show channels, channel_priority)</li>
+          <li>환경 이식 방법(environment.yml vs conda-pack) 선택 기준 3줄</li>
+        </ul>
+
+        <details class="details">
+          <summary>정답 가이드(숨김)</summary>
+          <div class="details-body">
+            <pre><code>REM wok-kitchen 정보 수집이다.
+conda activate wok-kitchen
+conda list python
+conda list numpy
+conda list fastapi
+conda list uvicorn
+
+REM pizza-oven 정보 수집이다.
+conda activate pizza-oven
+conda list python
+conda list numpy
+
+REM 설정 확인이다.
+conda config --show channels
+conda config --show channel_priority
+
+REM report.txt는 메모장으로 작성하면 된다.
+REM notepad report.txt</code></pre>
+            <div class="hint">
+              <strong>체크</strong> 환경별로 python/numpy 버전이 다르게 나오면 “주방 분리”를 이해한 것이다.
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <div class="card">
+        <h3>23번(선택). 배포 시나리오 선택 문제</h3>
+        <p class="p">
+          아래 두 상황에서 어떤 이식 방법을 선택할지 쓰고 이유를 적어라.
+          (정답은 한 가지가 아니라 “타당한 설명”이 핵심이다.)
+        </p>
+        <ul class="list">
+          <li>상황 1: 팀원 OS가 모두 Windows이고, 동일 환경을 매우 빠르게 맞춰야 한다.</li>
+          <li>상황 2: 팀원 OS가 Windows/Mac/Linux로 섞여 있고, 재현 가능한 수준이면 충분하다.</li>
+        </ul>
+
+        <details class="details">
+          <summary>정답 가이드(숨김)</summary>
+          <div class="details-body">
+            <ul class="list">
+              <li>상황 1: 동일 OS라면 conda-pack이 “통째 복제”에 유리할 수 있다.</li>
+              <li>상황 2: OS가 섞이면 environment.yml(--no-builds) 방식이 일반적으로 유리하다.</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="container">
+        <p class="footer-text">
+          이 연습문제는 “주방 분리(환경) → 설치(conda/mamba/pip) → 채널 strict → 내보내기/재현 → 통째 이식(conda-pack)”
+          흐름을 Windows CMD 기준으로 모두 실습하도록 설계되었다.
+        </p>
+      </div>
+    </footer>
+
+  </main>
+</body>
+</html>

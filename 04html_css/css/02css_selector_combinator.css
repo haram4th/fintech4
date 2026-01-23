@@ -1,0 +1,113 @@
+/* 복합셀렉터 combinator */
+/* 부모 자식 조상 자손/후손 */
+
+/* 후손 셀렉터 셀렉터1 셀렉터2*/
+/* div p */
+div p {
+    color: red;
+}
+
+/* 자식 셀렉터 child combinator */
+/* 셀렉터A > 셀렉터 B */
+div > p {
+    color: black;
+}
+
+span > p {
+    color: brown;
+}
+
+/* 형제(동위) 셀렉터 sibling combinator */
+/* 형제 관계에서 뒤에 위치하는 요소를 선택할 때 사용 */
+
+/* 인접 형제 셀렉터 (셀렉터 A + 셀렉터 B) */
+/* 셀렉터 A의 형제 요소 중 셀렉터 A 바로 뒤에 위치하는 
+셀렉터B 요소를 선택(연속적으로 와야 함) */
+/* A와 B사이에 다른 요소가 있으면 선택되지 않음 */
+
+/* 일반 형제 셀렉터 (셀렉터 A ~ 셀렉터 B) */
+/* 셀렉터 A의 형제 요소 중 뒤에 위치하는 
+셀렉터 B의 요소를 모두 선택*/
+
+/* 인접 형제 셀렉터 */
+p + ul {
+    color: red;
+}
+
+/* 일반 형제 셀렉터  */
+span ~ ul {
+    color: green;
+}
+
+h3 + ul{
+    color: black;
+}
+
+/* 가상 클래스 셀렉터 */
+/* 요소의 특정 상태에 따라 스타일을 정할 때 사용 */
+/* 특정 상태란? 마우스가 올라와 있을 때, 링크를 방문했을 때 */
+
+a:hover {
+    background-color: red;
+}
+
+input:focus {
+    background-color: yellow;
+}
+
+input[type="text"]:focus {
+    background-color: red;
+}
+
+input[type="password"]:focus {
+    color: white;
+}
+
+/* 구조 가상 클래스 셀렉터 */
+/* 셀렉터:first-child - 셀렉터에 해당하는 모든 요소 중 첫번째 자식인 요소를 선택 */
+/* 셀렉터:last-child - 셀렉터에 해당하는 모든 요소 중 마지막 자식인 요소를 선택 */
+
+p:first-child {
+    color: red;
+}
+
+p:last-child {
+    color: blue;
+}
+
+/* 셀렉터:nth-child(n), :nth-last-child(n) */
+/* :nth-child(n) - 셀렉터에 해당하는 모든 요소중 앞에서 n번째 자식인 요소를 선택 0*/
+/* :nth-last-child(n) - 셀렉터에 해당하는 모든 요소 중에서 뒤에서 n번째 자식인 요소를 선택 -1*/
+/* n은 1부터 시작 */
+/* 짝수번째 2n */
+
+/* ol 요소의 자식요소인 li중에서 짝수 번째 요소만을 선택 */
+ol > li:nth-child(2n) {
+    color: orange;
+}
+
+/* ol 요소의 자식요소인 li중에서 홀수 번째 요소만 선택 */
+ol > li:nth-child(2n+1) {
+    color: green;
+}
+
+/* ol의 li 중에서 첫번째 요소만 선택 */
+ol > li:first-child {
+    color: red;
+}
+
+/* ol의 li 중에서 3번째 요소만 선택 */
+ol > li:nth-child(3) {
+    background-color: yellow;
+}
+
+/* ul의 모든 자식 요소 중에서 뒤에서부터 홀수번째 요소만 선택 */
+ul > :nth-last-child(2n+1) {
+    color: brown;
+}
+
+/* ul의 모든 자식 요소 중에서 뒤에서부터 짝수 번째 요소만 선택 */
+ul > :nth-last-child(2n) {
+    color: blue;
+}
+

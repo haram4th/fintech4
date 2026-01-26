@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./css/03js_css.css">
+    <script defer src="./03javascript.js"></script>
+    
+    <title>자바스크립트 기초</title>
+    <!-- <script>
+        console.log("안녕하세요")
+        
+    </script> -->
+</head>
+<body>
+    <h1 id="title">HELLO WORLD in H1 tag</h1>
+
+    <hr>
+    <h1>클릭 이벤트 연결하기</h1>
+    <a href="https://www.naver.com">click</a>
+
+    <div id="box"></div>
+
+    <hr>
+
+    <h1>클릭 이벤트가 발생 할 때 숫자 증가, 감소하기</h1>
+    <a href="#" class="btnPlus">Plus</a>
+    <a href="#" class="btnMinus">Minus</a>
+
+
+    <!-- <script>
+        const title = document.querySelector("#title")
+        console.log(title)
+    </script> -->
+
+    <hr>
+    <h1>버튼을 클릭하면 좌우로 회전하는 박스 만들기</h1>
+    <a href="#" class="btnLeft">왼쪽으로 회전</a>
+    <a href="#" class="btnRight">오른쪽으로 회전</a>
+    <div id="box2">box2</div>
+
+
+    <hr>
+    <h1>윈도우 객체(웹브라우저 조작)</h1>
+
+    <button onclick="popup()">팝업</button><br>
+    <button onclick="printInfo()">window 객체 속성</button>
+
+    <div>
+        <button onclick="sTo()">scrollTo(100, 200)</button>
+        <button onclick="sBy()">scrollBy(100, 200)</button>
+    </div>
+
+</body>
+</html>

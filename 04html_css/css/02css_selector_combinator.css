@@ -13,7 +13,7 @@ div > p {
     color: black;
 }
 
-span > p {
+span > p.p3 {
     color: brown;
 }
 
@@ -80,6 +80,7 @@ p:last-child {
 /* :nth-last-child(n) - 셀렉터에 해당하는 모든 요소 중에서 뒤에서 n번째 자식인 요소를 선택 -1*/
 /* n은 1부터 시작 */
 /* 짝수번째 2n */
+/* 홀수번째 2n+1 */
 
 /* ol 요소의 자식요소인 li중에서 짝수 번째 요소만을 선택 */
 ol > li:nth-child(2n) {

@@ -1,0 +1,36 @@
+a {
+    font-size: 100px;
+    color: gray;
+}
+
+#box {
+    width: 200px;
+    height: 200px;
+    background-color: aqua;
+    margin: 100px auto;
+}
+
+/* 회전하는 상자 */
+
+a.btnLeft {
+    font-size: 20px;
+}
+
+a.btnRight {
+    font-size: 20px;
+}
+
+#box2 {
+    width: 200px;
+    height: 200px;
+    background-color: aqua;
+    margin: 100px auto;
+    transition: 1s;
+    text-align: center;
+    line-height: 200px;
+}
+
+body {
+    width: 5000px;
+    height: 5000px;
+}

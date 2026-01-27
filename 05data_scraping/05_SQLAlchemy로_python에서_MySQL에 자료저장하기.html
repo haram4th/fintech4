@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SQLAlchemy + MySQL + pandas 저장 강의안 (종합본: .env + book_id 중복 방지)</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,sans-serif; line-height:1.65; margin:0;}
+    .container{max-width:1040px; margin:0 auto; padding:24px;}
+    .header{padding:28px 0; border-bottom:1px solid #e7e7e7;}
+    .badge{display:inline-block; font-size:12px; padding:4px 10px; border:1px solid #ddd; border-radius:999px;}
+    .title{margin:10px 0 6px; font-size:30px;}
+    .subtitle{margin:0; color:#555;}
+    .section{margin:34px 0;}
+    .card{border:1px solid #e7e7e7; border-radius:16px; padding:18px; background:#fff;}
+    pre{margin:0; overflow:auto; padding:14px; background:#0b1020; color:#e9ecff; border-radius:12px;}
+    code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;}
+    .grid-2{display:grid; grid-template-columns:1fr; gap:14px;}
+    @media (min-width: 980px){ .grid-2{grid-template-columns:1fr 1fr;} }
+    .list{margin:10px 0 0 18px;}
+    .note{margin-top:10px; color:#444;}
+    .warn{margin-top:10px; padding:14px 16px; border-radius:12px; background:#fff7e6; border:1px solid #ffd28a;}
+    .ok{margin-top:10px; padding:14px 16px; border-radius:12px; background:#eafff1; border:1px solid #88e5ad;}
+    .mini{font-size:13px; color:#555;}
+    .hr{border:0; border-top:1px solid #e7e7e7; margin:22px 0;}
+    .kbd{display:inline-block; padding:0 7px; border-radius:8px; border:1px solid #e7e7e7; background:#fafafa; font-size:12px;}
+    .tag{display:inline-block; margin-right:6px; padding:2px 10px; border-radius:999px; border:1px solid #e7e7e7; background:#fafafa; font-size:12px;}
+    blockquote{margin:12px 0 0; padding:12px 14px; border-left:4px solid #e7e7e7; background:#fafafa; border-radius:10px;}
+  </style>
+</head>
+
+<body>
+<header class="header">
+  <div class="container">
+    <span class="badge">pandas · SQLAlchemy · PyMySQL · MySQL · python-dotenv · to_sql · ALTER TABLE · upsert</span>
+    <h1 class="title">SQLAlchemy로 MySQL 저장하기 — 종합본<br><strong>.env + book_id 중복 방지</strong></h1>
+    <p class="subtitle">
+      “주어진 코드”를 출발점으로<br>
+      ① SQLAlchemy 기초(Engine/Connection) ② .env 적용 ③ pandas to_sql 저장<br>
+      ④ <strong>book_id 기준 중복 방지(append → ALTER TABLE → upsert)</strong>까지 한 번에 정리합니다.
+    </p>
+  </div>
+</header>
+
+<main class="container">
+
+<section class="section">
+  <h2>0️⃣ 오늘 목표(최종 결과)</h2>
+  <div class="card">
+    <ul class="list">
+      <li><strong>코드 설명</strong>: db_connect / load_data / to_db가 왜 이런 구조인지 이해</li>
+      <li><strong>보안</strong>: ID/PW를 코드에 쓰지 않고 <strong>.env</strong>로 분리</li>
+      <li><strong>저장</strong>: DataFrame을 MySQL에 <strong>append</strong>로 저장</li>
+      <li><strong>중복 방지</strong>: <code>book_id</code>를 기준으로 <strong>DB에서 UNIQUE/PK</strong>를 걸고 upsert로 갱신</li>
+    </ul>
+    <div class="ok">
+      핵심 문장: <strong>to_sql은 제약조건을 못 건다 → append로 적재 → ALTER TABLE로 UNIQUE/PK → 그 다음 upsert</strong>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>1️⃣ 준비물 설치</h2>
+  <div class="card">
+<pre><code>pip install pandas sqlalchemy pymysql python-dotenv</code></pre>
+    <p class="note mini">
+      MySQL 서버는 별도로 실행 중이어야 합니다. (로컬 설치 / Docker 모두 가능)
+    </p>
+  </div>
+</section>
+
+<section class="section">
+  <h2>2️⃣ .env 준비 (ID/PW는 코드에 쓰지 않기)</h2>
+  <div class="card">
+    <p class="note">프로젝트 루트에 <code>.env</code> 파일을 만들고 아래처럼 작성합니다.</p>
+<pre><code># .env
+MYSQL_HOST=localhost
+MYSQL_PORT=3306
+MYSQL_USER=root
+MYSQL_PASSWORD=1234</code></pre>
+
+    <div class="warn">
+      <strong>.env는 Git에 올리면 안 됩니다.</strong><br>
+      <code>.gitignore</code>에 반드시 추가하세요.
+    </div>
+<pre><code># .gitignore
+.env</code></pre>
+  </div>
+</section>
+
+<section class="section">
+  <h2>3️⃣ SQLAlchemy 핵심 개념: Engine vs Connection</h2>
+  <div class="card">
+    <ul class="list">
+      <li><strong>Engine</strong>: DB 접속 정보(주소/계정/드라이버)를 담은 “설정 객체”</li>
+      <li><strong>Connection</strong>: Engine으로부터 얻는 “실제 연결 통로”</li>
+    </ul>
+    <div class="ok">
+      패턴: <strong>엔진 생성 → 연결 열기 → 작업 → 연결 닫기</strong>
+    </div>
+    <p class="note mini">
+      SQL 실행은 문자열 그대로보다 <code>text()</code>로 감싸는 것이 안전하고 일반적인 패턴입니다.
+    </p>
+  </div>
+</section>
+
+<section class="section">
+  <h2>4️⃣ 주어진 코드(원본) — 무엇을 하는 코드인가?</h2>
+  <div class="card">
+<pre><code>import pandas as pd
+import os
+from datetime import datetime
+from sqlalchemy import create_engine, text
+import pymysql
+pymysql.install_as_MySQLdb()
+
+
+def db_connect(dbname):
+    engine_root = create_engine(f"mysql+pymysql://root:1234@localhost:3306")
+    with engine_root.connect() as conn:
+        conn.execute(text(f"create database if not exists {dbname}"))
+        print(f"{dbname} 데이터베이스 확인/생성 완료")
+
+    engine = create_engine(f"mysql+pymysql://root:1234@localhost:3306/{dbname}")
+    conn = engine.connect()
+    return conn
+
+
+def load_data(dbname, table_name):
+    conn = db_connect(dbname)
+    data = pd.read_sql(table_name, con=conn)
+    conn.close()
+    return data        
+
+def to_db(dbname, table_name, df):
+    conn = db_connect(dbname)
+    df.to_sql(table_name, con=conn, index=False, if_exists="append")
+    conn.close()
+    return print(f"{dbname}.{table_name} 데이터 저장 완료")</code></pre>
+
+    <hr class="hr" />
+
+    <h3>4-1) db_connect(dbname) 설명</h3>
+    <ul class="list">
+      <li><span class="tag">1단계</span> DB 없이 서버에 접속(<code>...@host:port</code>)해서 <strong>DB 존재 확인/생성</strong></li>
+      <li><span class="tag">2단계</span> DB 이름을 붙여 다시 접속(<code>...@host:port/dbname</code>)하고 연결을 반환</li>
+    </ul>
+
+    <h3>4-2) load_data(dbname, table_name) 설명</h3>
+    <ul class="list">
+      <li><code>pd.read_sql</code>로 테이블 전체를 DataFrame으로 읽음</li>
+      <li>작업 후 반드시 <code>conn.close()</code>로 연결 닫음</li>
+    </ul>
+
+    <h3>4-3) to_db(dbname, table_name, df) 설명</h3>
+    <ul class="list">
+      <li><code>df.to_sql(..., if_exists="append")</code>로 <strong>행을 추가 저장</strong></li>
+      <li>이 방식은 “중복 검사” 없이 그냥 추가하므로 중복이 생길 수 있음</li>
+    </ul>
+  </div>
+</section>
+
+<section class="section">
+  <h2>5️⃣ 원본 코드를 .env 버전으로 수정(권장)</h2>
+  <div class="card">
+    <p class="note">
+      원본 코드는 <code>root:1234</code>가 코드에 박혀 있어 보안/관리 측면에서 불리합니다.<br>
+      아래처럼 <strong>.env에서 읽도록</strong> 바꾸는 것을 강력 추천합니다.
+    </p>
+
+<pre><code>import pandas as pd
+import os
+from sqlalchemy import create_engine, text
+import pymysql
+from dotenv import load_dotenv
+
+pymysql.install_as_MySQLdb()
+load_dotenv()
+
+MYSQL_HOST = os.getenv("MYSQL_HOST", "localhost")
+MYSQL_PORT = os.getenv("MYSQL_PORT", "3306")
+MYSQL_USER = os.getenv("MYSQL_USER", "root")
+MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "")
+
+def _mysql_url(dbname=None):
+    if dbname:
+        return f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{dbname}"
+    return f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}"
+
+def db_connect(dbname):
+    engine_root = create_engine(_mysql_url())
+    with engine_root.connect() as conn:
+        conn.execute(text(f"create database if not exists {dbname}"))
+        print(f"{dbname} 데이터베이스 확인/생성 완료")
+
+    engine = create_engine(_mysql_url(dbname))
+    conn = engine.connect()
+    return conn
+
+def load_data(dbname, table_name):
+    conn = db_connect(dbname)
+    data = pd.read_sql(table_name, con=conn)
+    conn.close()
+    return data
+
+def to_db_append(dbname, table_name, df):
+    conn = db_connect(dbname)
+    df.to_sql(table_name, con=conn, index=False, if_exists="append")
+    conn.close()
+    print(f"{dbname}.{table_name} 데이터 저장 완료(append)")</code></pre>
+
+  </div>
+</section>
+
+<section class="section">
+  <h2>6️⃣ 중복 방지의 핵심: book_id를 고유키로 잡는다</h2>
+  <div class="card">
+<pre><code># YES24 상세 링크에서 book_id 추출
+a_title = item.select_one(".gd_name")
+book_id = a_title["href"].split("/")[-1] if a_title else None</code></pre>
+
+    <p class="note">
+      <strong>book_id</strong>는 YES24 상품을 구분하는 고유 값이므로
+      <strong>중복 방지 기준 키</strong>로 가장 적합합니다.
+    </p>
+  </div>
+</section>
+
+<section class="section">
+  <h2>7️⃣ 중요한 사실: to_sql()로는 UNIQUE/PK를 걸 수 없다</h2>
+  <div class="card">
+    <p class="note">
+      <code>DataFrame.to_sql()</code>은 “데이터를 넣는 기능”만 합니다.<br>
+      PRIMARY KEY / UNIQUE 같은 <strong>제약조건을 설정하는 옵션이 없습니다</strong>.
+    </p>
+    <div class="warn">
+      그래서 중복 방지는 반드시 아래 순서로 합니다.<br>
+      <strong>append로 적재 → ALTER TABLE로 UNIQUE/PK 설정 → 그 이후 upsert</strong>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>8️⃣ (Step 1) 처음에는 append로 저장</h2>
+  <div class="card">
+<pre><code># 초기 적재(중복이 생겨도 “정상”인 단계)
+to_db_append("yes24_db", "books", df)</code></pre>
+
+    <div class="warn">
+      이 단계에서는 중복 방지를 “시작하지 않았다”.<br>
+      따라서 <strong>중복이 생길 수 있다</strong>.
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>9️⃣ (Step 2 · 선택) 배치 내부 중복 제거</h2>
+  <div class="card">
+<pre><code># 같은 실행(batch) 안에서만 중복 제거
+df = df.drop_duplicates(subset=["book_id"], keep="last")</code></pre>
+    <p class="note mini">
+      이건 “저장 전에 깔끔하게 정리”하는 보조 수단입니다.<br>
+      DB에 이미 들어있는 중복까지 완벽히 처리하려면 DB 제약조건이 필요합니다.
+    </p>
+  </div>
+</section>
+
+<section class="section">
+  <h2>🔟 (Step 3) ALTER TABLE로 book_id에 UNIQUE/PK 추가</h2>
+  <div class="card">
+    <p class="note">
+      초기 적재가 끝났다면 이제 DB에서 중복을 원천 차단합니다.
+    </p>
+
+<pre><code>-- book_id를 UNIQUE로 만들기(추천)
+ALTER TABLE books
+ADD UNIQUE KEY uk_book_id (book_id);</code></pre>
+
+<pre><code>-- 또는 book_id를 PRIMARY KEY로 만들기
+ALTER TABLE books
+ADD PRIMARY KEY (book_id);</code></pre>
+
+    <div class="ok">
+      이 시점부터 DB는 같은 book_id가 다시 들어오면 “중복”으로 판단할 수 있습니다.
+    </div>
+
+    <div class="warn">
+      ⚠️ 이미 중복 데이터가 들어있으면 UNIQUE/PK 추가가 실패할 수 있습니다.<br>
+      그 경우 먼저 중복을 정리해야 합니다.
+    </div>
+
+<pre><code>-- 중복 확인(예시)
+SELECT book_id, COUNT(*)
+FROM books
+GROUP BY book_id
+HAVING COUNT(*) &gt; 1;</code></pre>
+
+  </div>
+</section>
+
+<section class="section">
+  <h2>1️⃣1️⃣ (Step 4) upsert로 “중복이면 업데이트” 저장</h2>
+  <div class="card">
+    <p class="note">
+      MySQL은 <code>INSERT ... ON DUPLICATE KEY UPDATE</code>로 upsert를 지원합니다.<br>
+      단, <strong>UNIQUE/PK가 먼저 설정되어 있어야</strong> duplicate key를 감지합니다.
+    </p>
+
+<pre><code>def to_db_upsert_mysql(dbname, table_name, df):
+    """MySQL 전용 upsert (PK/UNIQUE 필요)
+    - 기준 고유키: book_id
+    """
+    conn = db_connect(dbname)
+
+    cols = list(df.columns)
+    col_list = ", ".join([f"`{c}`" for c in cols])
+    placeholders = ", ".join(["%s"] * len(cols))
+
+    # book_id는 보통 업데이트 제외
+    update_cols = [c for c in cols if c != "book_id"]
+    update_expr = ", ".join([f"`{c}`=VALUES(`{c}`)" for c in update_cols])
+
+    sql = f"""INSERT INTO `{table_name}` ({col_list})
+    VALUES ({placeholders})
+    ON DUPLICATE KEY UPDATE {update_expr}"""
+
+    rows = [tuple(x) for x in df.itertuples(index=False, name=None)]
+
+    conn.execute(text(sql), rows)
+    conn.commit()
+    conn.close()
+
+    print(f"{dbname}.{table_name} book_id 기준 upsert 저장 완료")</code></pre>
+
+    <div class="ok">
+      이제부터는 같은 book_id로 다시 수집되어도 중복 저장이 아니라 “갱신”됩니다.
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>1️⃣2️⃣ 실습 예제: 1) append로 넣고 2) UNIQUE 걸고 3) upsert로 갱신</h2>
+  <div class="card">
+<pre><code>import pandas as pd
+from datetime import datetime
+
+# 예시 데이터: book_id가 같은 행이 2개(중복 상황)
+df = pd.DataFrame([
+    {"book_id": 111, "title": "책A", "publisher": "출판사1", "updated_at": datetime.now()},
+    {"book_id": 111, "title": "책A(제목수정)", "publisher": "출판사1", "updated_at": datetime.now()},
+    {"book_id": 222, "title": "책B", "publisher": "출판사2", "updated_at": datetime.now()},
+])
+
+# (선택) 배치 중복 제거
+df = df.drop_duplicates(subset=["book_id"], keep="last")
+
+# 1) 초기 적재(append)
+to_db_append("yes24_db", "books", df)
+
+# 2) 그 다음에 직접 SQL로 UNIQUE/PK를 걸어야 함(처음 1회)
+#    ALTER TABLE books ADD UNIQUE KEY uk_book_id (book_id);
+
+# 3) 이후부터는 upsert 사용
+to_db_upsert_mysql("yes24_db", "books", df)
+
+# 확인
+print(load_data("yes24_db", "books"))</code></pre>
+
+    <div class="warn">
+      ⚠️ 위 예제는 “순서”를 보여주기 위한 것입니다.<br>
+      실제 운영에서는 <strong>초기 적재가 끝난 뒤에만</strong> ALTER TABLE을 1회 수행하고,<br>
+      그 이후부터는 upsert만 사용하면 됩니다.
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>1️⃣3️⃣ 초보자가 자주 하는 실수 TOP 6</h2>
+  <div class="card">
+    <ol class="list">
+      <li><strong>.env 로드 누락</strong>: <code>load_dotenv()</code>를 안 씀</li>
+      <li><strong>연결 미종료</strong>: 작업 후 <code>conn.close()</code>를 빼먹음</li>
+      <li><strong>to_sql로 UNIQUE를 걸려고 함</strong>: 불가능(ALTER TABLE로 해야 함)</li>
+      <li><strong>UNIQUE/PK 없이 upsert를 기대</strong>: duplicate key를 감지 못함</li>
+      <li><strong>ALTER TABLE이 실패</strong>: 이미 중복 데이터가 들어있음</li>
+      <li><strong>book_id가 문자열인데 BIGINT로 설계</strong>: 타입 설계/변환 필요</li>
+    </ol>
+  </div>
+</section>
+
+<footer class="section">
+  <div class="card">
+    <p class="mini">
+      정리: 이 강의안의 핵심은 “도구 역할 분리”입니다.<br>
+      <strong>pandas(to_sql)=저장</strong> / <strong>SQL(ALTER TABLE)=제약조건</strong> / <strong>MySQL(upsert)=중복 방지</strong>
+    </p>
+  </div>
+</footer>
+
+</main>
+</body>
+</html>

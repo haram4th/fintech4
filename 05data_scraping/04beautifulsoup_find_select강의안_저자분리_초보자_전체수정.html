@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>YES24 베스트셀러 크롤링 강의안 — find vs select (실전 검증 완료 + 차이 설명 포함)</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .grid-2 > *, .grid-3 > *, .card { min-width: 0; }
+    .card { overflow: hidden; }
+    pre { max-width: 100%; overflow-x: auto; box-sizing: border-box; }
+    pre > code { display: block; white-space: pre; }
+  </style>
+</head>
+
+<body>
+<header class="header">
+  <div class="container">
+    <span class="badge">requests · BeautifulSoup · lxml</span>
+    <h1 class="title">YES24 베스트셀러 크롤링<br><strong>find</strong> vs <strong>select</strong> 실전 비교</h1>
+    <p class="subtitle">
+      실제 YES24 상품 <strong>li DOM 구조</strong>를 기준으로<br>
+      <strong>작동 검증된 코드</strong> + <strong>find/select 차이(선택 기준 포함)</strong>를 설명합니다.
+    </p>
+  </div>
+</header>
+
+<main class="container">
+
+<section class="section">
+  <h2>1️⃣ 크롤링 기본 세팅 (lxml 사용)</h2>
+  <div class="card">
+<pre><code>import requests
+from bs4 import BeautifulSoup
+from urllib.parse import urljoin
+
+URL = "https://www.yes24.com/product/category/bestseller?categoryNumber=001"
+BASE = "https://www.yes24.com"
+
+headers = {
+    "User-Agent": "Mozilla/5.0",
+    "Accept-Language": "ko-KR,ko;q=0.9",
+}
+
+resp = requests.get(URL, headers=headers)
+resp.raise_for_status()
+
+soup = BeautifulSoup(resp.text, "lxml")</code></pre>
+
+    <p class="note">
+      ✔ lxml 설치가 완료된 환경을 전제로 합니다.<br>
+      ✔ 수업에서는 반드시 <code>raise_for_status()</code>로 요청 실패를 빨리 발견하세요.
+    </p>
+  </div>
+</section>
+
+<!-- ================================================== -->
+<section class="section" id="difference">
+  <h2>2️⃣ find vs select — “무엇이 어떻게 다른가?” (자세한 설명)</h2>
+
+  <div class="card">
+    <h3>2-1. 핵심 개념 차이(한 문장)</h3>
+    <ul class="list">
+      <li><strong>find / find_all</strong> : “태그 이름 + 속성 조건”으로 <strong>트리(부모/자식/형제) 탐색</strong>을 단계적으로 한다.</li>
+      <li><strong>select / select_one</strong> : CSS 선택자 문법으로 <strong>원하는 위치를 한 번에 찌르는 방식</strong>이다.</li>
+    </ul>
+
+    <h3>2-2. 반환 타입(자주 헷갈리는 포인트)</h3>
+    <ul class="list">
+      <li><code>find()</code> / <code>select_one()</code> → <strong>Tag 또는 None</strong></li>
+      <li><code>find_all()</code> / <code>select()</code> → <strong>list[Tag]</strong> (빈 리스트 가능)</li>
+    </ul>
+
+    <h3>2-3. 문법 비교(같은 일을 서로 다른 방식으로)</h3>
+    <div class="grid-2">
+      <div class="card">
+        <h4>속성 존재 여부로 필터링</h4>
+<pre><code># find
+items = soup.find_all("li", attrs={"data-goods-no": True})
+
+# select
+items = soup.select("li[data-goods-no]")</code></pre>
+        <p class="note">
+          <code>[attr]</code>는 “해당 속성이 존재”를 의미합니다.
+        </p>
+      </div>
+
+      <div class="card">
+        <h4>여러 클래스 조건</h4>
+<pre><code># find (Tag 하나를 찾는 경우)
+tag = item.find("span", class_="txt_num dash")  # txt_num + dash 둘 다 가진 태그 매칭
+
+# select
+tag = item.select_one("span.txt_num.dash")</code></pre>
+        <p class="note">
+          select는 클래스 조건이 눈에 더 잘 보이고, 복잡해질수록 더 간결해집니다.
+        </p>
+      </div>
+    </div>
+
+    <h3>2-4. Attribute(속성) 필터링 차이(수업 핵심)</h3>
+    <div class="grid-2">
+      <div class="card">
+        <h4>find: attrs로 필터링(정확/유연)</h4>
+<pre><code># 속성값이 특정 문자열과 정확히 같은 경우
+a = item.find("a", attrs={"href": "/product/goods/167627172"})
+
+# 속성 존재 + True/False
+img = item.find("img", attrs={"data-original": True})
+
+# 정규식/람다로 더 유연한 필터링도 가능(확장)
+# (강의 확장 파트에서 다루기 좋음)</code></pre>
+        <p class="note">
+          find는 “파이썬 조건”으로 필터링을 확장하기 쉽습니다(람다/정규식 등).
+        </p>
+      </div>
+
+      <div class="card">
+        <h4>select: CSS 선택자로 필터링(간결/직관)</h4>
+<pre><code># href가 /product/goods/ 로 시작하는 a
+a = item.select_one('a[href^="/product/goods/"]')
+
+# href에 "ReviewYn=Y"가 포함된 a
+a = item.select_one('a[href*="ReviewYn=Y"]')
+
+# 특정 data- 속성 존재
+img = item.select_one("img[data-original]")</code></pre>
+        <p class="note">
+          select는 “개발자도구에서 보는 선택자 느낌”이라 초보자에게 직관적입니다.
+        </p>
+      </div>
+    </div>
+
+    <h3>2-5. “깊은 구조”를 뽑을 때의 차이</h3>
+    <div class="grid-2">
+      <div class="card">
+        <h4>find: 단계적으로 내려감(안전하지만 길어짐)</h4>
+<pre><code>upper = item.find("div", class_="img_upper")
+rank_tag = upper.find("em", class_="rank") if upper else None
+rank = rank_tag.get_text(strip=True) if rank_tag else None</code></pre>
+      </div>
+      <div class="card">
+        <h4>select: 한 번에 찌름(짧고 가독성↑)</h4>
+<pre><code>rank_tag = item.select_one("div.img_upper em.ico.rank")
+rank = rank_tag.get_text(strip=True) if rank_tag else None</code></pre>
+      </div>
+    </div>
+
+    <h3>2-6. 언제 find가 더 좋은가?</h3>
+    <ul class="list">
+      <li><strong>형제 노드/트리 탐색</strong>이 필요할 때 (예: 저자 역할 분리에서 <code>a.next_sibling</code>)</li>
+      <li><strong>중간 지점에서 검사/예외 처리</strong>를 넣고 싶을 때 (단계별로 if 체크)</li>
+      <li>조건이 CSS로 표현하기 애매하고, <strong>파이썬 로직(람다/정규식)</strong>이 편할 때</li>
+    </ul>
+
+    <h3>2-7. 언제 select가 더 좋은가?</h3>
+    <ul class="list">
+      <li><strong>깊은 구조를 짧게</strong> 찾고 싶을 때</li>
+      <li>개발자 도구에서 본 구조를 그대로 옮겨 <strong>선택자 기반으로 안정적으로</strong> 뽑고 싶을 때</li>
+      <li><strong>속성 패턴(^, *, $)</strong> 조건이 필요한 경우(시작/포함/끝)</li>
+    </ul>
+
+    <div class="warn">
+      ❗ 결론(수업용 정확한 문장):<br>
+      <strong>find로 “안 되는 것”이 아니라</strong>, 복잡해질수록 <strong>select가 더 간결</strong>해집니다.<br>
+      실무에서는 <strong>select로 타겟을 잡고</strong>, 필요한 경우 <strong>find/트리 탐색(next_sibling 등)</strong>으로 마무리하는 혼합이 가장 흔합니다.
+    </div>
+  </div>
+</section>
+
+<!-- ================================================== -->
+<section class="section">
+  <h2>3️⃣ 책 1권(li[data-goods-no]) 선택</h2>
+
+  <div class="grid-2">
+
+    <div class="card">
+      <h3>find 방식</h3>
+<pre><code>items = soup.find_all("li", attrs={"data-goods-no": True})
+item = items[0]
+goods_no = item.get("data-goods-no")</code></pre>
+    </div>
+
+    <div class="card">
+      <h3>select 방식</h3>
+<pre><code>items = soup.select("li[data-goods-no]")
+item = items[0]
+goods_no = item.get("data-goods-no")</code></pre>
+    </div>
+
+  </div>
+
+  <p class="note">
+    ✔ 두 방식 모두 동일한 결과를 반환합니다. (이 페이지에서는 <code>li[data-goods-no]</code>가 “책 1권 단위”로 매우 유용)
+  </p>
+</section>
+
+<!-- ================================================== -->
+<section class="section">
+  <h2>4️⃣ 기본 정보 추출 — find 버전 (검증 완료)</h2>
+
+  <div class="card">
+<pre><code># 제목 / 상세 링크
+a_title = item.find("a", class_="gd_name")
+title = a_title.get_text(strip=True) if a_title else None
+detail_url = urljoin(BASE, a_title.get("href", "")) if a_title else None
+
+# 이미지
+img = item.find("img", class_="lazy")
+image_url = (img.get("data-original") or img.get("src")) if img else None
+
+# 순위 (범위 고정: img_upper 안에서만)
+upper = item.find("div", class_="img_upper")
+rank_tag = upper.find("em", class_="rank") if upper else None
+rank = rank_tag.get_text(strip=True) if rank_tag else None
+
+# 순위 변동
+rank_info = item.find("span", class_="rank_info")
+rank_change_tag = rank_info.find("em", class_="rank") if rank_info else None
+rank_change = rank_change_tag.get_text(strip=True) if rank_change_tag else None
+
+# 할인율
+disc_wrap = item.find("span", class_="txt_sale")
+disc_tag = disc_wrap.find("em", class_="num") if disc_wrap else None
+discount_percent = disc_tag.get_text(strip=True) if disc_tag else None
+
+# 판매가
+sale_wrap = item.find("strong", class_="txt_num")
+sale_tag = sale_wrap.find("em", class_="yes_b") if sale_wrap else None
+sale_price = sale_tag.get_text(strip=True) if sale_tag else None
+
+# 정가
+list_wrap = item.find("span", class_="txt_num dash")
+list_tag = list_wrap.find("em", class_="yes_m") if list_wrap else None
+list_price = list_tag.get_text(strip=True) if list_tag else None
+
+print(title, detail_url, image_url, discount_percent, sale_price, list_price)</code></pre>
+
+    <p class="note">
+      ✔ find만 사용해도 추출 가능하지만, 깊은 구조가 많아지면 코드가 길어집니다.
+    </p>
+  </div>
+</section>
+
+<!-- ================================================== -->
+<section class="section">
+  <h2>5️⃣ 동일 로직 — select 버전 (검증 완료)</h2>
+
+  <div class="card">
+<pre><code>a_title = item.select_one("a.gd_name")
+title = a_title.get_text(strip=True) if a_title else None
+detail_url = urljoin(BASE, a_title.get("href", "")) if a_title else None
+
+img = item.select_one("img.lazy")
+image_url = (img.get("data-original") or img.get("src")) if img else None
+
+rank = item.select_one("div.img_upper em.ico.rank")
+rank = rank.get_text(strip=True) if rank else None
+
+rank_change = item.select_one("span.rank_info em.txt.rank")
+rank_change = rank_change.get_text(strip=True) if rank_change else None
+
+discount_percent = item.select_one("span.txt_sale em.num")
+discount_percent = discount_percent.get_text(strip=True) if discount_percent else None
+
+sale_price = item.select_one("strong.txt_num em.yes_b")
+sale_price = sale_price.get_text(strip=True) if sale_price else None
+
+list_price = item.select_one("span.txt_num.dash em.yes_m")
+list_price = list_price.get_text(strip=True) if list_price else None
+
+print(title, detail_url, image_url, discount_percent, sale_price, list_price)</code></pre>
+
+    <p class="note">
+      ✔ select는 한 줄 선택자로 깊은 구조를 바로 찾을 수 있어 가독성이 좋습니다.
+    </p>
+  </div>
+</section>
+
+<!-- ================================================== -->
+<div class="note">
+      ✔ 이 버전은 “역할별로 무한히 확장”하는 방식이 아니라, 수업용으로 <strong>가장 많이 등장하는 역할만</strong> 먼저 분리합니다.<br>
+      ✔ 책마다 “감수/편역/엮음/그림” 등 표현이 달라서, 필요하면 조건을 <strong>하나씩 추가</strong>해 확장하면 됩니다.
+    </div>
+  </div>
+</section>
+
+<!-- ================================================== -->
+
+<!-- ================================================== -->
+<section class="section">
+  <h2>6️⃣ 저자 역할 분리 (초보자용 · defaultdict 미사용)</h2>
+
+  <div class="card">
+<pre><code># ✔ defaultdict ❌ 사용하지 않음
+# ✔ 문자열 split 기반으로 역할 분리 (초보자용)
+
+auth_span = item.select_one("span.info_auth")
+
+# 역할별 리스트 직접 준비
+author = []        # 저자
+translator = []    # 역자
+illustrator = []   # 그림
+other = []         # 기타
+
+if auth_span:
+    text = auth_span.get_text(" ", strip=True)
+    parts = [p.strip() for p in text.split("/")]
+
+    for p in parts:
+        if "저자" in p:
+            author.append(p.replace("저자", "").strip())
+        elif "역자" in p:
+            translator.append(p.replace("역자", "").strip())
+        elif "그림" in p:
+            illustrator.append(p.replace("그림", "").strip())
+        else:
+            other.append(p)
+
+# 역할별 딕셔너리로 정리
+authors_by_role = {
+    "저자": author,
+    "역자": translator,
+    "그림": illustrator,
+    "기타": other,
+}
+
+print(authors_by_role)</code></pre>
+
+    <p class="note">
+      ✔ <code>defaultdict</code> 없이도 충분히 역할 분리가 가능합니다.<br>
+      ✔ 초보자는 <strong>문자열 → split → 조건 분기</strong> 흐름에 익숙해지는 것이 핵심입니다.
+    </p>
+  </div>
+</section>
+
+<section class="section">
+  <h2>7️⃣ (선택) 숫자 정리 + 1권 딕셔너리로 묶기</h2>
+
+  <div class="card">
+<pre><code>import re
+
+def to_int(s):
+    if not s:
+        return None
+    s = re.sub(r"[^\d]", "", s)
+    return int(s) if s else None
+
+
+# --- (6️⃣에서 했던) 저자 역할 분리: 초보자용으로 여기에도 같이 넣어두기 ---
+auth_span = item.select_one("span.info_auth")
+
+author = []
+translator = []
+illustrator = []
+other = []
+
+if auth_span:
+    text = auth_span.get_text(" ", strip=True)
+    parts = [p.strip() for p in text.split("/")]
+    for p in parts:
+        if "저자" in p:
+            author.append(p.replace("저자", "").strip())
+        elif "역자" in p:
+            translator.append(p.replace("역자", "").strip())
+        elif "그림" in p:
+            illustrator.append(p.replace("그림", "").strip())
+        else:
+            other.append(p)
+
+authors_by_role = {
+    "저자": author,
+    "역자": translator,
+    "그림": illustrator,
+    "기타": other,
+}
+
+publisher_tag = item.select_one("span.info_pub a")
+publisher = publisher_tag.get_text(strip=True) if publisher_tag else None
+
+pub_date_tag = item.select_one("span.info_date")
+pub_date = pub_date_tag.get_text(strip=True) if pub_date_tag else None
+
+book = {
+    "goods_no": goods_no,
+    "rank": to_int(rank),
+    "rank_change": to_int(rank_change),
+    "title": title,
+    "detail_url": detail_url,
+    "image_url": image_url,
+    "authors_by_role": authors_by_role,
+    "publisher": publisher,
+    "pub_date": pub_date,
+    "discount_percent": to_int(discount_percent),
+    "sale_price": to_int(sale_price),
+    "list_price": to_int(list_price),
+}
+
+print(book)</code></pre>
+
+    <p class="note">
+      ✔ 가격/할인율은 <code>"15,120원"</code>처럼 기호가 섞이므로 숫자 정리가 필요합니다.
+    </p>
+  </div>
+</section>
+
+<!-- ================================================== -->
+<section class="section">
+  <h2>8️⃣ 여러 권 수집 루프(요약 형태)</h2>
+
+  <div class="card">
+<pre><code>books = []
+items = soup.select("li[data-goods-no]")
+
+for item in items:
+    goods_no = item.get("data-goods-no")
+
+    a_title = item.select_one("a.gd_name")
+    title = a_title.get_text(strip=True) if a_title else None
+    detail_url = urljoin(BASE, a_title.get("href", "")) if a_title else None
+
+    img = item.select_one("img.lazy")
+    image_url = (img.get("data-original") or img.get("src")) if img else None
+
+    # ✅ 저자 역할 분리 (초보자용 · defaultdict 미사용)
+    auth_span = item.select_one("span.info_auth")
+
+    author = []
+    translator = []
+    illustrator = []
+    other = []
+
+    if auth_span:
+        text = auth_span.get_text(" ", strip=True)
+        parts = [p.strip() for p in text.split("/")]
+        for p in parts:
+            if "저자" in p:
+                author.append(p.replace("저자", "").strip())
+            elif "역자" in p:
+                translator.append(p.replace("역자", "").strip())
+            elif "그림" in p:
+                illustrator.append(p.replace("그림", "").strip())
+            else:
+                other.append(p)
+
+    authors_by_role = {
+        "저자": author,
+        "역자": translator,
+        "그림": illustrator,
+        "기타": other,
+    }
+
+    pub_tag = item.select_one("span.info_pub a")
+    publisher = pub_tag.get_text(strip=True) if pub_tag else None
+
+    date_tag = item.select_one("span.info_date")
+    pub_date = date_tag.get_text(strip=True) if date_tag else None
+
+    books.append({
+        "goods_no": goods_no,
+        "title": title,
+        "detail_url": detail_url,
+        "image_url": image_url,
+        "authors_by_role": authors_by_role,  # ✅ 이미 dict
+        "publisher": publisher,
+        "pub_date": pub_date,
+    })
+
+print(len(books))
+print(books[:2])</code></pre>
+
+    <p class="note">
+      ✔ 수업에서는 처음엔 5~20개만 확인하고 확장하세요.
+    </p>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <p class="footer-text">
+      다음 확장: DataFrame 변환 → CSV 저장 → 페이지네이션 처리 → 예외(광고/빈값/구조변경) 대응
+    </p>
+  </div>
+</footer>
+
+</main>
+</body>
+</html>

@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PyInstaller + Conda로 주식 수집 스크립트 실행파일 만들기 (매일 자동 실행)</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* styles.css가 없거나 최소 보완이 필요할 때를 대비한 안전용(있어도 큰 영향 없게) */
+    .container{max-width:1000px;margin:0 auto;padding:24px}
+    pre{overflow:auto}
+    code{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
+    .muted{opacity:.85}
+    .card{border:1px solid rgba(0,0,0,.08);border-radius:14px;padding:16px;margin:14px 0}
+    .badge{display:inline-block;padding:4px 10px;border-radius:999px;border:1px solid rgba(0,0,0,.12);font-size:12px;margin-right:8px}
+    details{border:1px dashed rgba(0,0,0,.18);border-radius:12px;padding:10px 12px}
+    summary{cursor:pointer;font-weight:700}
+    .grid{display:grid;grid-template-columns:1fr;gap:12px}
+    @media (min-width:900px){.grid{grid-template-columns:1fr 1fr}}
+    .ok{color:seagreen;font-weight:700}
+    .warn{color:darkorange;font-weight:700}
+    .danger{color:crimson;font-weight:700}
+    ul{line-height:1.7}
+    hr{margin:24px 0}
+  </style>
+</head>
+<body>
+  <main class="container">
+    <span class="badge">Conda</span>
+    <span class="badge">PyInstaller</span>
+    <span class="badge">Daily Scheduler</span>
+    <h1>PyInstaller + Conda로 “주식 데이터 수집기” 실행파일 만들기 (매일 자동 실행)</h1>
+
+    <p class="muted">
+      목표: 아래와 같은 <strong>네이버 금융 페이지 스크래핑 코드</strong>를 기반으로,
+      <strong>exe 실행파일</strong>로 만들고 <strong>매일 자동 실행</strong>되도록 구성한다.
+      (Conda 환경 기준, Windows 예시 중심 / macOS·Linux는 대안 포함)
+    </p>
+
+    <hr />
+
+    <section class="card">
+      <h2>0) 전제: “실행파일”이 된다는 의미</h2>
+      <ul>
+        <li>PyInstaller는 파이썬 코드를 “네이티브 컴파일”하는 것이 아니라, <strong>파이썬 인터프리터 + 코드 + 라이브러리</strong>를 묶어 배포 가능한 형태로 만든다.</li>
+        <li>그래서 <strong>빌드 환경(Conda 환경)</strong>이 매우 중요하다. “내가 빌드한 환경”의 패키지가 그대로 포함된다.</li>
+        <li>매일 자동 실행은 PyInstaller가 아니라 <strong>작업 스케줄러(Windows Task Scheduler / cron)</strong>가 담당한다.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>1) 프로젝트 폴더 구조(권장)</h2>
+      <pre><code>stock_collector/
+├─ stock_collector.py        # 실행 진입점(여기서 네 코드 실행)
+├─ db.py                     # to_db() 구현(또는 기존 모듈 import)
+├─ requirements.txt          # (선택) conda/pip 혼용 시 기록용
+├─ styles.css                # (이 문서용) - 실제 exe에는 필요 없음
+└─ dist/ build/ *.spec       # 빌드 후 생성</code></pre>
+
+      <p class="muted">
+        ※ <strong>중요</strong>: 너의 코드에서 <code>to_db()</code>는 별도 함수/모듈로 존재해야 함.
+        exe는 “스크립트 + 의존성”을 묶는 거라, <code>to_db</code>가 어디에 있는지 확실해야 한다.
+      </p>
+    </section>
+
+    <section class="card">
+      <h2>2) Conda 환경 만들기 (가장 중요)</h2>
+      <p>가장 안전한 방법: <strong>새 conda env</strong>를 만들고 그 안에서만 실행/빌드.</p>
+
+      <div class="grid">
+        <div class="card">
+          <h3>2-1) env 생성</h3>
+          <pre><code># 이름은 원하는대로
+conda create -n stockbot python=3.11 -y
+conda activate stockbot</code></pre>
+        </div>
+
+        <div class="card">
+          <h3>2-2) 필수 패키지 설치</h3>
+          <p class="muted">lxml은 conda-forge로 설치가 안정적일 때가 많음</p>
+          <pre><code># conda로 먼저(권장)
+conda install -c conda-forge lxml -y
+
+# pip로 나머지
+pip install requests beautifulsoup4 pandas pyinstaller</code></pre>
+        </div>
+      </div>
+
+      <details>
+        <summary>자주 생기는 이슈: lxml 설치가 꼬일 때</summary>
+        <div class="card">
+          <p class="warn">증상</p>
+          <ul>
+            <li>빌드/실행 시 lxml 관련 ImportError</li>
+            <li>pip로 lxml 설치 후 바이너리 충돌</li>
+          </ul>
+          <p class="ok">해결</p>
+          <pre><code># (권장) conda로 lxml을 설치하고 pip로 덮어쓰지 않기
+conda remove lxml -y
+conda install -c conda-forge lxml -y</code></pre>
+        </div>
+      </details>
+    </section>
+
+    <section class="card">
+      <h2>3) 너의 수집 코드 “실행파일용”으로 정리하기</h2>
+      <p class="muted">
+        원본 코드가 셀 단위(Jupyter) 느낌이어서, 실행파일로 만들 때는 최소한
+        <strong>main 함수 + 예외처리 + 로그(또는 print)</strong> 구조를 권장한다.
+      </p>
+
+      <h3>3-1) 핵심 포인트(현재 코드 기준)</h3>
+      <ul>
+        <li><strong>requests.get</strong>에 최소한의 헤더(User-Agent)를 주면 차단/오동작이 줄어들 수 있음</li>
+        <li><strong>print(..., end="\r")</strong>는 콘솔에서 “진행상황 덮어쓰기”에 좋지만, 스케줄러에서는 로그 파일 저장이 더 유용</li>
+        <li><strong>time.sleep(3)</strong>는 요청 간 텀(예의)로 좋아 보임</li>
+        <li><strong>to_db()</strong>는 실패 시 재시도/오류 로그가 필요(매일 자동 실행이면 특히)</li>
+      </ul>
+
+      <h3>3-2) 실행파일 진입점 예시(권장)</h3>
+      <p class="muted">아래는 “너의 로직을 최대한 유지”하면서, exe/스케줄러에 적합하게 감싼 형태.</p>
+
+      <pre><code>import time
+import requests
+import pandas as pd
+from bs4 import BeautifulSoup as bs
+
+# 예: to_db를 별도 모듈로 분리했다고 가정
+from db import to_db
+
+def collect_one(code: str) -&gt; pd.DataFrame:
+    url = f"https://finance.naver.com/item/main.naver?code={code}"
+    headers = {
+        "User-Agent": "Mozilla/5.0"
+    }
+    r = requests.get(url, headers=headers, timeout=10)
+    r.raise_for_status()
+
+    soup = bs(r.content, "lxml")
+
+    result = {}
+    for idx, dd in enumerate(soup.select("#middle dl.blind dd")[:12]):
+        if idx == 0:
+            result["날짜"] = "".join(dd.get_text().split()[:3]) \
+                .replace("년", "-").replace("월", "-").replace("일", "")
+        elif idx == 2:
+            temp = dd.get_text().split()
+            if len(temp) &gt; 2:
+                result["거래소"] = temp[2]
+                result[temp[0]] = temp[1]
+            else:
+                result["거래소"] = ""
+                result[temp[0]] = temp[1]
+        elif idx == 3:
+            temp = dd.get_text().split()
+            result[temp[0]] = int(temp[1].replace(",", ""))
+            if temp[3] == "상승":
+                result[temp[2]] = int(temp[4].replace(",", ""))
+            else:
+                result[temp[2]] = -int(temp[4].replace(",", ""))
+            if temp[5] == "플러스":
+                result["증가율"] = temp[6] + "%"
+            else:
+                result["증가율"] = "-" + temp[6] + "%"
+        else:
+            temp = dd.get_text().split()
+            if idx == 1 or idx == 11:
+                result[temp[0]] = temp[1]
+            else:
+                result[temp[0]] = int(temp[1].replace(",", ""))
+
+    return pd.DataFrame([result])
+
+def run(codes):
+    total = len(codes)
+    for index, code in enumerate(codes[:20]):
+        try:
+            print(f"{index}/{total-1} 데이터 수집중", end="\r")
+            df = collect_one(code)
+            to_db("stock_info", "stock_price_2026", df)
+            time.sleep(3)
+        except Exception as e:
+            # 매일 자동 실행이면 "어느 종목에서 실패했는지"가 중요
+            print(f"\n[ERROR] code={code} err={e}")
+
+if __name__ == "__main__":
+    # TODO: 네 프로젝트에서 codes를 어떻게 가져오는지에 맞게 구성
+    codes = ["005930", "000660"]  # 예시
+    run(codes)</code></pre>
+
+      <details>
+        <summary>스케줄러용 “로그 파일 저장”을 추가하고 싶다면?</summary>
+        <div class="card">
+          <p class="muted">스케줄러로 돌릴 땐 콘솔창을 안 봐도 되니까, 실패/성공 로그를 파일로 남기는 게 편해요.</p>
+          <pre><code>from datetime import datetime
+
+def log(msg: str):
+    ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with open("stockbot.log", "a", encoding="utf-8") as f:
+        f.write(f"[{ts}] {msg}\n")</code></pre>
+          <p class="muted">그리고 print 대신 log()를 같이 쓰면, 나중에 문제 추적이 매우 쉬워짐.</p>
+        </div>
+      </details>
+    </section>
+
+    <section class="card">
+      <h2>4) PyInstaller로 exe 만들기 (Conda env에서 빌드)</h2>
+
+      <h3>4-1) 가장 기본 (폴더 배포: 안정적)</h3>
+      <pre><code># (stockbot conda env 활성화 상태에서)
+pyinstaller stock_collector.py</code></pre>
+      <p class="muted">
+        결과: <code>dist/stock_collector/stock_collector.exe</code> 형태(One-folder).
+        매일 돌릴 거면 이 방식이 안정적인 편.
+      </p>
+
+      <h3>4-2) 단일 exe (onefile)</h3>
+      <pre><code>pyinstaller --onefile stock_collector.py</code></pre>
+      <p class="warn">
+        onefile은 실행 시 임시폴더에 풀고 실행하므로 첫 실행이 느릴 수 있고,
+        일부 환경에서 보안 프로그램 오탐 가능성이 올라갈 수 있음.
+      </p>
+
+      <h3>4-3) 콘솔창 숨길까?</h3>
+      <ul>
+        <li>지금은 진행상황/에러를 print로 보기 때문에 <strong>콘솔창 유지</strong>가 일반적으로 편함</li>
+        <li>완전히 자동(스케줄러) + 로그 파일로만 볼 거면 <strong>--noconsole</strong>도 가능</li>
+      </ul>
+      <pre><code># 콘솔창 숨김(로그 파일 기반 운영 시)
+pyinstaller --onefile --noconsole stock_collector.py</code></pre>
+
+      <details>
+        <summary>권장 운영 조합(실무)</summary>
+        <div class="card">
+          <ul>
+            <li><strong>배포:</strong> one-folder</li>
+            <li><strong>실행:</strong> 스케줄러</li>
+            <li><strong>관측:</strong> 로그 파일(stockbot.log) + 실패 종목 기록</li>
+          </ul>
+        </div>
+      </details>
+    </section>
+
+    <section class="card">
+      <h2>5) DB(to_db) 포함/주의사항</h2>
+      <ul>
+        <li><strong>to_db가 사용하는 DB 드라이버</strong>(예: pymysql, sqlalchemy, mysqlclient 등)가 있다면, conda env에 설치되어 있어야 exe에 포함됨</li>
+        <li>DB 접속정보를 코드에 하드코딩하면 위험 → 최소한 환경변수(.env) 또는 별도 config로 분리 권장</li>
+      </ul>
+
+      <details>
+        <summary>(선택) .env를 쓴다면 exe에서 주의할 점</summary>
+        <div class="card">
+          <p class="muted">
+            <strong>매일 자동 실행</strong>이면 DB 비번이 포함된 파일을 어떻게 둘지가 중요해요.
+            exe와 같은 폴더에 <code>.env</code>를 두고 읽게 하거나, OS 환경변수로 등록하는 방식이 보통 더 안전합니다.
+          </p>
+          <p class="danger">팁</p>
+          <ul>
+            <li>exe 안에 민감정보를 “포함”시키는 방식은 피하기</li>
+            <li>OS 환경변수(또는 별도 보호된 config 파일) 권장</li>
+          </ul>
+        </div>
+      </details>
+    </section>
+
+    <section class="card">
+      <h2>6) “매일 자동 실행” 설정</h2>
+
+      <div class="grid">
+        <div class="card">
+          <h3>6-1) Windows: 작업 스케줄러(Task Scheduler)</h3>
+          <ol>
+            <li>시작 메뉴 → “작업 스케줄러” 실행</li>
+            <li>오른쪽 “작업 만들기”</li>
+            <li><strong>트리거</strong>: 매일, 원하는 시간</li>
+            <li><strong>동작</strong>: 프로그램 시작</li>
+            <li><strong>프로그램/스크립트</strong>: exe 경로 지정</li>
+            <li><strong>시작 위치(중요)</strong>: exe가 있는 폴더로 지정</li>
+          </ol>
+          <p class="muted">
+            “시작 위치”를 안 넣으면, 상대경로로 로그 파일/설정 파일을 읽을 때 문제가 생길 수 있음.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3>6-2) macOS/Linux: cron</h3>
+          <p class="muted">예: 매일 18:00 실행</p>
+          <pre><code>crontab -e
+
+# 아래 한 줄 추가
+0 18 * * * /path/to/stock_collector &gt;&gt; /path/to/stockbot.log 2&gt;&amp;1</code></pre>
+          <p class="muted">표준출력/에러를 로그로 모으면 추적이 쉬움.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>7) 빌드/배포 체크리스트</h2>
+      <ul>
+        <li><strong>conda activate stockbot</strong> 상태에서 실행/빌드 했나?</li>
+        <li><strong>dist 폴더 결과물</strong>을 다른 폴더로 복사해서 실행해도 정상인가?</li>
+        <li>DB 연결(to_db)이 실제로 되는가? 실패 시 로그가 남는가?</li>
+        <li>요청이 차단되는 경우를 대비해 <strong>timeout</strong>, <strong>예외처리</strong>가 있는가?</li>
+        <li>스케줄러 실행 시 “시작 위치(working directory)”가 올바른가?</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>8) (선택) spec 파일로 빌드 고정하기</h2>
+      <p class="muted">옵션이 많아지면 커맨드보다 spec로 고정하는 편이 관리가 편해요.</p>
+      <pre><code># 1) spec 생성(예시)
+pyinstaller --name StockBot --onefile stock_collector.py
+
+# 2) 이후에는 spec로만 빌드
+pyinstaller StockBot.spec</code></pre>
+    </section>
+
+    <hr />
+
+    <section class="card">
+      <h2>9) 너의 코드에 맞춘 “오늘 할 일” 요약</h2>
+      <ol>
+        <li>conda env 만들기: <code>stockbot</code></li>
+        <li>패키지 설치: requests/bs4/pandas/lxml/pyinstaller + DB 드라이버</li>
+        <li>현재 코드를 <code>stock_collector.py</code>로 옮기고 <code>__main__</code> 실행 구조 만들기</li>
+        <li>PyInstaller로 빌드(one-folder 권장)</li>
+        <li>작업 스케줄러에 exe 등록 + 시작 위치 지정</li>
+        <li>로그 파일 남기기(권장)</li>
+      </ol>
+    </section>
+
+    <footer class="muted">
+      <p>원하면 다음도 같이 만들어줄게:</p>
+      <ul>
+        <li><strong>to_db()</strong>가 SQLAlchemy/MySQL 기준일 때 최소 구현 예시</li>
+        <li>실행파일에서 <strong>codes 로드(파일/DB/API)</strong> 방식 추천</li>
+        <li>실패 종목만 재시도하는 구조(매일 운영 안정화)</li>
+      </ul>
+    </footer>
+  </main>
+</body>
+</html>

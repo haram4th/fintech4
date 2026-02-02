@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Selenium 실전 강의안 — (업데이트) 요소 찾기/대기/입력/클릭 상세</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    @media print{
+      body{ background:#fff; }
+      .header{ border-bottom: 0; background: #fff; }
+      .toc{ display:none; }
+      .card{ box-shadow:none; }
+      a{ text-decoration: none; }
+      pre{ page-break-inside: avoid; }
+      .card, .mini, details{ break-inside: avoid; }
+    }
+    @page { size: A4; margin: 14mm; }
+  
+    /* ===== Layout override: 항상 1열(세로)로 쌓기 ===== */
+    .grid-2, .grid-3{
+      display: grid;
+      grid-template-columns: 1fr !important;
+      gap: 16px;
+    }
+
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="container">
+      <span class="badge">실습형 교안</span>
+      <h1 class="title">Selenium 사용법 — 동적 웹 자동화 &amp; 데이터 수집 (Google Play 리뷰 예시)</h1>
+      <p class="subtitle">
+        이 문서는 사용자가 제공한 <strong>“Google Play에서 Banking 앱 리뷰 수집”</strong> 교안 흐름을
+        <strong>Selenium 관점</strong>으로 재구성한 “실전 강의안”입니다.
+        <br/>
+        ※ 보안/탐지 체계를 회피하는 구체적 방법(우회 코드, 지문 위조, CAPTCHA 자동화 등)은 악용 소지가 커서 제공하지 않습니다.
+        대신 <strong>정상 범위에서의 안정화(대기/리트라이/속도 제한/디버깅)</strong>에 집중합니다.
+      </p>
+
+      <nav class="toc" aria-label="목차">
+        <a href="#sec0">0. 준비물</a>
+        <a href="#sec1">1. Selenium 핵심 개념</a>
+        <a href="#sec2">2. 기본 템플릿</a>
+        <a href="#sec3">3. 요소 찾기/선택자/대기</a>
+        <a href="#sec3b">3-B. 클릭/입력/키보드/마우스</a>
+        <a href="#sec4">4. 스크롤/무한로딩</a>
+        <a href="#sec5">5. Google Play 리뷰 수집 패턴</a>
+        <a href="#sec6">6. Headless 실행</a>
+        <a href="#sec7">7. 안정성/예외처리</a>
+        <a href="#sec8">8. PDF 출력</a>
+        <a href="#sec9">9. 연습문제</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <section class="section" id="sec0">
+      <h2>0. 준비물 (환경/설치)</h2>
+
+      <div class="card">
+        <h3>0-1) 설치</h3>
+        <pre><code>pip install selenium webdriver-manager</code></pre>
+        <div class="note">
+          Selenium 4는 브라우저 드라이버(ChromeDriver 등)가 필요합니다. <strong>webdriver-manager</strong>를 쓰면
+          드라이버 버전 관리를 크게 줄일 수 있어요.
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="sec1">
+      <h2>1. Selenium 핵심 개념 (Requests/BS와의 차이)</h2>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>1-1) 언제 Selenium을 쓰나?</h3>
+          <ul class="list">
+            <li>데이터가 <strong>JavaScript 렌더링</strong> 이후에 생성되는 경우</li>
+            <li>스크롤/클릭 등 <strong>사용자 이벤트</strong>로 DOM이 바뀌는 경우</li>
+            <li>로그인/팝업/페이지네이션 등 <strong>UI 흐름</strong>을 따라가야 하는 경우</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3>1-2) Selenium vs BeautifulSoup</h3>
+          <table class="table">
+            <thead><tr><th>구분</th><th>BeautifulSoup/requests</th><th>Selenium</th></tr></thead>
+            <tbody>
+              <tr><td>렌더링</td><td>HTML 원문(정적) 중심</td><td>브라우저 렌더링(동적) 포함</td></tr>
+              <tr><td>속도</td><td>빠름</td><td>느림(브라우저 구동)</td></tr>
+              <tr><td>추천</td><td>가능하면 우선</td><td>JS/이벤트가 필수일 때</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="sec2">
+      <h2>2. 기본 템플릿 (드라이버 생성 ~ 종료)</h2>
+
+      <div class="card">
+        <h3>2-1) 드라이버 생성 함수</h3>
+        <pre><code>from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
+
+# Chrome 옵션 설정
+options = Options()
+options.add_argument("--window-size=1280,900")
+options.add_argument("--no-sandbox")
+options.add_argument("--disable-dev-shm-usage")
+
+# ChromeDriver 설정
+service = Service(ChromeDriverManager().install())
+driver = webdriver.Chrome(service=service, options=options)
+driver.set_page_load_timeout(30)
+
+try:
+    driver.get("https://play.google.com/store/apps/details?id=viva.republica.toss")
+    print(driver.title)
+finally:
+    driver.quit()
+</code></pre>
+        <div class="note">
+          <strong>중요</strong>: 항상 <code>try/finally</code>로 <code>driver.quit()</code> 보장!
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="sec3">
+      <h2>3. 요소 찾기/선택자/대기 (이 파트가 실무 핵심)</h2>
+
+      <div class="card">
+        <h3>3-1) Selenium에서 원하는 요소 찾기 (Finders) — “1개 vs 여러 개”</h3>
+        <div class="note">
+          요소를 찾는 방식은 크게 <strong>(1) 단일 요소</strong> vs <strong>(2) 여러 요소</strong>로 나뉩니다.
+          <br/>
+          - <code>find_element(...)</code> : 첫 번째 요소 1개를 반환 (없으면 예외 발생)<br/>
+          - <code>find_elements(...)</code> : 여러 요소를 <strong>list</strong>로 반환 (없으면 빈 리스트)
+        </div>
+
+        <pre><code>from selenium.webdriver.common.by import By
+
+# 1개 요소 찾기 (WebElement 반환)
+el = driver.find_element(By.CSS_SELECTOR, "button.primary")
+
+# 여러 요소 찾기 (list[WebElement] 반환)
+items = driver.find_elements(By.CSS_SELECTOR, ".item")
+
+print(type(el), len(items))</code></pre>
+
+        <div class="warn">
+          <strong>주의</strong>:
+          <code>find_element</code>는 못 찾으면 즉시 실패합니다. 동적 페이지에선 반드시 <strong>Wait(대기)</strong>과 같이 쓰는 습관이 중요해요.
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>3-2) By.* 로케이터 종류 (자주 쓰는 것 위주)</h3>
+
+        <table class="table">
+          <thead>
+            <tr><th>로케이터</th><th>예시</th><th>언제 쓰나</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>By.CSS_SELECTOR</code></td>
+              <td><code>driver.find_element(By.CSS_SELECTOR, "div.card &gt; a")</code></td>
+              <td>가장 추천. 유지보수/가독성이 좋음</td>
+            </tr>
+            <tr>
+              <td><code>By.XPATH</code></td>
+              <td><code>driver.find_element(By.XPATH, "//button[contains(.,'저장')]")</code></td>
+              <td>CSS로 어려운 경우 보조로 사용</td>
+            </tr>
+            <tr>
+              <td><code>By.ID</code></td>
+              <td><code>driver.find_element(By.ID, "submit-button")</code></td>
+              <td>id가 안정적이면 가장 간단</td>
+            </tr>
+            <tr>
+              <td><code>By.NAME</code></td>
+              <td><code>driver.find_element(By.NAME, "q")</code></td>
+              <td>폼 입력 필드에서 자주 사용</td>
+            </tr>
+            <tr>
+              <td><code>By.CLASS_NAME</code></td>
+              <td><code>driver.find_element(By.CLASS_NAME, "title")</code></td>
+              <td>클래스가 단일/안정적일 때</td>
+            </tr>
+            <tr>
+              <td><code>By.TAG_NAME</code></td>
+              <td><code>driver.find_elements(By.TAG_NAME, "a")</code></td>
+              <td>태그 전체 수집/필터링 전 단계</td>
+            </tr>
+            <tr>
+              <td><code>By.LINK_TEXT</code></td>
+              <td><code>driver.find_element(By.LINK_TEXT, "자세히 보기")</code></td>
+              <td>&lt;a&gt; 링크의 정확한 텍스트로 찾기</td>
+            </tr>
+            <tr>
+              <td><code>By.PARTIAL_LINK_TEXT</code></td>
+              <td><code>driver.find_element(By.PARTIAL_LINK_TEXT, "자세히")</code></td>
+              <td>링크 텍스트 일부로 찾기</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="note">
+          실무 추천 순서:
+          <strong>CSS_SELECTOR → (필요 시) XPATH → ID/NAME(있으면 최고)</strong>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>3-3) “대기(Wait)”는 필수: WebDriverWait + Expected Conditions</h3>
+        <pre><code>from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
+
+wait = WebDriverWait(driver, 10)
+
+# DOM에 존재하기만 하면 OK
+el = wait.until(EC.presence_of_element_located((By.ID, "submit-button")))
+
+# 클릭 가능한 상태까지
+btn = wait.until(EC.element_to_be_clickable((By.ID, "submit-button")))
+btn.click()</code></pre>
+
+        <div class="warn">
+          자주 하는 실수 2가지
+          <ul class="list">
+            <li><strong>오타</strong>: <code>selenium.webdrive...</code> 가 아니라 <code>selenium.webdriver...</code></li>
+            <li><strong>로케이터 튜플</strong>: EC 함수에는 <code>(By.ID, "x")</code>를 <strong>한 번 더 괄호</strong>로 감싼 형태로 넣습니다.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>3-4) find_elements + Wait 조합 (여러 개 로딩 기다리기)</h3>
+        <pre><code>from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
+
+wait = WebDriverWait(driver, 10)
+
+wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, ".item")))
+items = driver.find_elements(By.CSS_SELECTOR, ".item")
+print("items:", len(items))</code></pre>
+      </div>
+    </section>
+
+    <section class="section" id="sec3b">
+      <h2>3-B. 클릭/입력/키보드/마우스 (인터랙션 실전)</h2>
+
+      <div class="card">
+        <h3>3-B-1) 클릭: click() + 스크롤-인투-뷰</h3>
+        <pre><code>from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
+wait = WebDriverWait(driver, 10)
+
+btn = wait.until(EC.element_to_be_clickable((By.ID, "submit-button")))
+btn.click()
+
+# 가끔 클릭이 안 먹으면 (요소가 화면 밖/가려짐)
+driver.execute_script("arguments[0].scrollIntoView({block:'center'});", btn)
+btn.click()</code></pre>
+      </div>
+
+      <div class="card">
+        <h3>3-B-2) 입력: send_keys(), clear(), ENTER 입력</h3>
+        <pre><code>from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
+wait = WebDriverWait(driver, 10)
+
+inp = wait.until(EC.element_to_be_clickable((By.NAME, "q")))
+inp.clear()
+inp.send_keys("selenium")
+inp.send_keys(Keys.ENTER)</code></pre>
+      </div>
+
+      <div class="card">
+        <h3>3-B-3) 드롭다운(select): Select</h3>
+        <pre><code>from selenium.webdriver.support.ui import Select
+from selenium.webdriver.common.by import By
+
+sel = Select(driver.find_element(By.ID, "country"))
+sel.select_by_visible_text("Korea")</code></pre>
+        <div class="warn">
+          HTML의 <code>&lt;select&gt;</code> 태그일 때만 해당됩니다. 커스텀 드롭다운(div)은 “버튼 클릭 → 옵션 클릭”으로 처리합니다.
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>3-B-4) ActionChains: hover, drag &amp; drop</h3>
+        <pre><code>from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.by import By
+
+actions = ActionChains(driver)
+
+menu = driver.find_element(By.CSS_SELECTOR, ".menu")
+actions.move_to_element(menu).perform()</code></pre>
+      </div>
+    </section>
+
+    <section class="section" id="sec4">
+      <h2>4. 스크롤/무한로딩(리뷰 수집의 핵심 패턴)</h2>
+
+      <div class="card">
+        <h3>4-1) 스크롤 기본</h3>
+        <pre><code>driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")</code></pre>
+      </div>
+
+      <div class="card">
+        <h3>4-2) “더 로딩” 반복 템플릿</h3>
+        <pre><code>import time
+
+def scroll_until_no_more(driver, step=1200, pause=0.8, max_round=30):
+    last_height = driver.execute_script("return document.body.scrollHeight")
+    for _ in range(max_round):
+        driver.execute_script(f"window.scrollBy(0, {step});")
+        time.sleep(pause)
+        new_height = driver.execute_script("return document.body.scrollHeight")
+        if new_height == last_height:
+            break
+        last_height = new_height</code></pre>
+      </div>
+    </section>
+
+    <section class="section" id="sec5">
+      <h2>5. Google Play 리뷰 수집 패턴 (실습 예시)</h2>
+
+      <div class="card">
+        <h3>5-1) 실습 코드(예시): 카드 반복 추출 뼈대</h3>
+        <pre><code>import pandas as pd
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+
+APP_URL = "https://play.google.com/store/apps/details?id=com.example.app&amp;hl=ko&amp;gl=KR"
+
+driver = make_driver(headless=False)
+wait = WebDriverWait(driver, 15)
+
+rows = []
+try:
+    driver.get(APP_URL)
+
+    driver.execute_script("window.scrollTo(0, document.body.scrollHeight*0.45);")
+    scroll_until_no_more(driver, max_round=25)
+
+    cards = driver.find_elements(By.CSS_SELECTOR, "div[data-review-id]")
+    for c in cards:
+        def safe_text(sel):
+            try:
+                return c.find_element(By.CSS_SELECTOR, sel).text
+            except:
+                return ""
+
+        rows.append({
+            "author": safe_text("span[aria-label]"),
+            "date": safe_text("span[class*='date']"),
+            "content": safe_text("div[class*='content']")
+        })
+
+    df = pd.DataFrame(rows).drop_duplicates()
+    df.to_csv("googleplay_reviews.csv", index=False, encoding="utf-8-sig")
+finally:
+    driver.quit()</code></pre>
+      </div>
+    </section>
+
+    <section class="section" id="sec6">
+      <h2>6. Headless 실행</h2>
+      <div class="card">
+        <pre><code>driver = make_driver(headless=True)</code></pre>
+      </div>
+    </section>
+
+    <section class="section" id="sec7">
+      <h2>7. 안정성(리트라이/속도제한)</h2>
+      <div class="grid-2">
+        <div class="card">
+          <h3>재시도</h3>
+          <pre><code>import time
+from selenium.common.exceptions import TimeoutException, WebDriverException
+
+def retry(fn, tries=3, wait_sec=2):
+    last_err = None
+    for _ in range(tries):
+        try:
+            return fn()
+        except (TimeoutException, WebDriverException) as e:
+            last_err = e
+            time.sleep(wait_sec)
+    raise last_err</code></pre>
+        </div>
+        <div class="card">
+          <h3>폴라이트 대기</h3>
+          <pre><code>import random, time
+def polite_pause(base=0.6, jitter=0.6):
+    time.sleep(base + random.random()*jitter)</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="sec8">
+      <h2>8. PDF 출력(브라우저 인쇄)</h2>
+      <div class="card">
+        <ol class="ol">
+          <li>HTML을 Chrome/Edge로 열기</li>
+          <li><strong>Ctrl + P</strong></li>
+          <li>프린터: <strong>PDF로 저장</strong></li>
+          <li>저장</li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="section" id="sec9">
+      <h2>9. 연습문제 (힌트/정답 접힘)</h2>
+
+      <div class="card">
+        <h3>문제 1) clickable까지 기다린 뒤 클릭</h3>
+        <details class="qa hint">
+          <summary>힌트</summary>
+          <div class="details-body">
+            <ul class="list">
+              <li><code>WebDriverWait</code> + <code>EC.element_to_be_clickable</code></li>
+            </ul>
+          </div>
+        </details>
+        <details class="qa answer">
+          <summary>정답(예시 코드)</summary>
+          <div class="details-body">
+            <pre><code>from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
+
+wait = WebDriverWait(driver, 10)
+button = wait.until(EC.element_to_be_clickable((By.ID, "submit-button")))
+button.click()</code></pre>
+          </div>
+        </details>
+      </div>
+
+      <div class="card">
+        <h3>문제 2) 입력 + 엔터</h3>
+        <details class="qa hint">
+          <summary>힌트</summary>
+          <div class="details-body">
+            <ul class="list">
+              <li><code>send_keys</code> + <code>Keys.ENTER</code></li>
+            </ul>
+          </div>
+        </details>
+        <details class="qa answer">
+          <summary>정답(예시 코드)</summary>
+          <div class="details-body">
+            <pre><code>from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
+wait = WebDriverWait(driver, 10)
+q = wait.until(EC.element_to_be_clickable((By.NAME, "q")))
+q.clear()
+q.send_keys("selenium webdriver" + Keys.ENTER)</code></pre>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <p class="footer-text">
+        이 문서는 첨부된 <strong>styles.css</strong>를 사용하며, PDF 출력이 가능하도록 인쇄 스타일을 포함합니다.
+      </p>
+    </footer>
+
+  </main>
+</body>
+</html>

@@ -1,0 +1,646 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>데이터 분석 전반 강의안 — 슬라이드형 HTML</title>
+
+  <!-- ✅ CSS 분리 -->
+  <link rel="stylesheet" href="styles2_compact.css" />
+
+  <script>
+    // ✅ 원본에서 정규식/개행 부분이 깨져 있던 것을 정상 동작하도록 수정
+    document.addEventListener("DOMContentLoaded", () => {
+      const nodes = document.querySelectorAll(".raw");
+      const boldify = (s) => s.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+      nodes.forEach(el => {
+        const t = el.textContent;
+        el.innerHTML = boldify(t).replace(/\n/g, "<br/>");
+      });
+    });
+  </script>
+</head>
+
+<body>
+  <div class="wrap">
+
+    <header class="deck-header">
+      <div class="deck-title">
+        <div>
+          <h1>데이터 분석 전반 강의안 — 통계 · ML · DL · LLM · Vision · 직무 로드맵</h1>
+        </div>
+        <p class="hint">상단 네비 클릭 → 해당 파트로 이동 · Chrome 인쇄 → PDF 저장</p>
+      </div>
+
+      <nav class="deck-nav" aria-label="파트 네비게이션">
+        <div class="row">
+          <a href="#data-part0">0부 · 개요</a>
+          <a href="#data-part1">1부 · 분석 유형</a>
+          <a href="#data-part2">2부 · 머신러닝</a>
+          <a href="#data-part3">3부 · 딥러닝</a>
+          <a href="#data-part4">4부 · LLM</a>
+          <a href="#data-part5">5부 · Vision/멀티모달</a>
+          <a href="#data-part6">6부 · 직군/로드맵</a>
+          <a href="#data-conclusion">정리</a>
+          <span class="mini">클릭하면 해당 파트로 이동</span>
+        </div>
+      </nav>
+    </header>
+
+    <!-- =========================
+         PART 0
+         ========================= -->
+    <section class="slide" id="data-part0">
+      <div class="kicker">
+        <span class="pill"><span class="dot"></span>PART 0</span>
+        <span class="pill">데이터 분석 개요</span>
+      </div>
+      <h2>0부. 데이터 분석이란 무엇인가</h2>
+
+      <div class="callout">
+        <p class="raw">데이터 분석(Data Analysis)은 관측된 데이터를 기반으로 **패턴을 발견하고, 설명하고, 예측하거나, 의사결정을 돕는 과정**이다.
+기술(도구/모델)보다 중요한 것은 항상 **“무엇을 알고 싶은가?”라는 질문(Problem Definition)**이다.</p>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <p class="raw"><strong>설명(Descriptive)</strong>
+무슨 일이 일어났는가?
+- KPI/대시보드, 리포팅
+- 탐색적 분석(EDA)</p>
+          <div class="tags">
+            <span class="tag">EDA</span><span class="tag">BI</span><span class="tag">Dashboard</span>
+          </div>
+        </div>
+        <div class="card">
+          <p class="raw"><strong>예측(Predictive)</strong>
+앞으로 무엇이 일어날 것인가?
+- 분류/회귀/시계열 예측
+- 위험/수요/이탈 확률</p>
+          <div class="tags">
+            <span class="tag">Classification</span><span class="tag">Regression</span><span class="tag">Forecasting</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid2" style="margin-top:12px">
+        <div class="card">
+          <p class="raw"><strong>처방(Prescriptive)</strong>
+그래서 무엇을 해야 하는가?
+- 최적화/실험(A/B)
+- 정책/추천/가격 전략</p>
+          <div class="tags">
+            <span class="tag">Optimization</span><span class="tag">Experiment</span><span class="tag">Decision</span>
+          </div>
+        </div>
+        <div class="card">
+          <p class="raw"><strong>제품화(Productization)</strong>
+분석 결과를 “서비스”로 만들기
+- 모델 운영(MLOps)
+- 모니터링/드리프트/재학습</p>
+          <div class="tags">
+            <span class="tag">MLOps</span><span class="tag">Monitoring</span><span class="tag">Drift</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="diagram">
+        <div class="flow">
+          <div class="step"><b>Data</b><small>수집·정제</small></div>
+          <div class="step"><b>Analysis</b><small>통계·ML·DL</small></div>
+          <div class="step"><b>Insight</b><small>원인·패턴</small></div>
+          <div class="step"><b>Decision</b><small>정책·전략</small></div>
+        </div>
+        <div class="cap">데이터 분석의 끝은 “리포트”가 아니라 “의사결정(행동)”이다.</div>
+      </div>
+
+      <!-- ✅ 핀테크 활용 추가 -->
+      <div class="fintech">
+        <p class="title"><strong>핀테크에서의 활용(0부 관점)</strong></p>
+        <ul>
+          <li><strong>설명</strong>: 결제 성공률, 앱 전환율, 부정거래(의심) 비율, 고객 민원 유형을 대시보드로 상시 모니터링</li>
+          <li><strong>예측</strong>: 대출 연체 가능성, 고객 이탈 가능성, 카드 사용액/예금 유입(시계열) 예측</li>
+          <li><strong>처방</strong>: 금리/한도/프로모션을 최적화하거나, A/B 테스트로 UI·알림 정책 의사결정</li>
+          <li><strong>제품화</strong>: “신용평가/사기탐지/추천”을 API로 운영하고 드리프트 감지 후 재학습</li>
+        </ul>
+        <div class="tagline">핵심은 “모델”보다, <strong>문제정의→데이터→운영</strong>까지 이어지는 전체 흐름이다.</div>
+      </div>
+
+    </section>
+
+    <!-- =========================
+         PART 1
+         ========================= -->
+    <section class="slide" id="data-part1">
+      <div class="kicker">
+        <span class="pill"><span class="dot"></span>PART 1</span>
+        <span class="pill">분석 유형</span>
+      </div>
+      <h2>1부. 데이터 분석의 종류</h2>
+
+      <div class="callout warn">
+        <p class="raw">정답이 있는가? (지도/비지도)
+예측 대상이 숫자인가/범주인가? (회귀/분류)
+시간 축이 중요한가? (시계열)
+이 3가지로 대부분의 문제를 분류할 수 있다.</p>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <p class="raw"><strong>분류 분석 (Classification)</strong>
+목표: 데이터를 정해진 범주 중 하나로 구분
+산출: 확률(0~1) + 임계값 정책
+예시: 스팸/정상, 이탈/유지, 질병 유무</p>
+          <div class="tags">
+            <span class="tag">Precision/Recall</span><span class="tag">ROC-AUC</span><span class="tag">Threshold</span>
+          </div>
+        </div>
+        <div class="card">
+          <p class="raw"><strong>회귀 분석 (Regression)</strong>
+목표: 연속적인 수치를 예측
+산출: 예측값 + 오차(불확실성)
+예시: 가격, 매출, 시간, 점수 예측</p>
+          <div class="tags">
+            <span class="tag">MAE/RMSE</span><span class="tag">Residual</span><span class="tag">Uncertainty</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid2" style="margin-top:12px">
+        <div class="card">
+          <p class="raw"><strong>군집 분석 (Clustering)</strong>
+목표: 정답 라벨 없이 유사한 데이터 묶기
+산출: 군집 ID + 군집 해석(프로파일링)
+예시: 고객 세그먼트, 행동 유형</p>
+          <div class="tags">
+            <span class="tag">K-Means</span><span class="tag">DBSCAN</span><span class="tag">Silhouette</span>
+          </div>
+        </div>
+        <div class="card">
+          <p class="raw"><strong>차원 축소 (Dimensionality Reduction)</strong>
+목표: 고차원 정보를 낮은 차원으로 압축
+산출: 임베딩/좌표(시각화, 노이즈 제거)
+예시: 2D 시각화, 특징 압축, 검색 기반</p>
+          <div class="tags">
+            <span class="tag">PCA</span><span class="tag">t-SNE/UMAP</span><span class="tag">Embedding</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid2" style="margin-top:12px">
+        <div class="card">
+          <p class="raw"><strong>연관 규칙 (Association)</strong>
+목표: 함께 발생하는 패턴 찾기
+예시: 장바구니 분석(상품 A→B 동시구매)</p>
+          <div class="tags">
+            <span class="tag">Apriori</span><span class="tag">Support/Confidence</span>
+          </div>
+        </div>
+        <div class="card">
+          <p class="raw"><strong>이상탐지 (Anomaly Detection)</strong>
+목표: 정상과 다른 패턴(희귀 사건) 탐지
+예시: 센서 이상, 사기/부정, 품질 이상</p>
+          <div class="tags">
+            <span class="tag">Isolation Forest</span><span class="tag">AutoEncoder</span><span class="tag">Rule+Model</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ✅ 핀테크 활용 추가 -->
+      <div class="fintech">
+        <p class="title"><strong>핀테크에서의 활용(1부: “문제 유형” 매핑)</strong></p>
+        <ul>
+          <li><strong>분류</strong>: 대출 승인/거절, 연체 위험(고/중/저), 부정거래 의심(Yes/No), 고객 이탈(Yes/No)</li>
+          <li><strong>회귀</strong>: 적정 한도/금리 산출, 예상 소비액/예금 잔액, 수수료/수익 예측</li>
+          <li><strong>군집</strong>: 고객을 “투자성향/소비패턴/대출성향” 세그먼트로 나눠 개인화 마케팅</li>
+          <li><strong>차원축소</strong>: 거래/로그의 고차원 특징을 임베딩으로 압축해 검색·탐지·시각화에 활용</li>
+          <li><strong>연관규칙</strong>: “이 상품을 산 사람은 이런 금융상품도 가입” → 번들/교차판매 후보</li>
+          <li><strong>이상탐지</strong>: AML(자금세탁) 의심 패턴, 계정 탈취 징후, 비정상 결제/로그인 탐지</li>
+        </ul>
+      </div>
+
+    </section>
+
+    <!-- =========================
+         PART 2
+         ========================= -->
+    <section class="slide" id="data-part2">
+      <div class="kicker">
+        <span class="pill"><span class="dot"></span>PART 2</span>
+        <span class="pill">Machine Learning</span>
+        <span class="pill">Tabular</span>
+      </div>
+      <h2>2부. 머신러닝 기반 데이터 분석</h2>
+
+      <div class="callout">
+        <p class="raw">머신러닝은 “특징(Feature)”을 바탕으로 예측 규칙을 학습한다.
+표형(Tabular) 데이터에서는 여전히 **트리 기반 모델(Gradient Boosting)**이 강력한 베이스라인이다.</p>
+      </div>
+
+      <div class="grid3">
+        <div class="card">
+          <p class="raw"><strong>선형 모델</strong>
+- 해석이 쉬움
+- 빠르고 안정적
+예: 선형/로지스틱 회귀</p>
+        </div>
+        <div class="card">
+          <p class="raw"><strong>트리/앙상블</strong>
+- 비선형 패턴 강함
+- 피처 엔지니어링과 궁합
+예: RandomForest, XGBoost</p>
+        </div>
+        <div class="card">
+          <p class="raw"><strong>커널/거리 기반</strong>
+- 데이터 형태에 민감
+- 스케일링 중요
+예: SVM, KNN</p>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <p class="raw"><strong>실무 체크리스트 (표형 데이터)</strong>
+- 데이터 누수(Leakage) 점검: 미래 정보가 피처에 섞이지 않게
+- 불균형(Imbalance): Precision/Recall 중심으로 평가 + 임계값 최적화
+- 검증 전략: 시간 데이터는 TimeSplit / 그룹은 GroupKFold
+- 설명가능성: 중요 피처/기여도(SHAP 등)로 의사결정 근거 제공</p>
+      </div>
+
+      <div class="diagram">
+        <div class="flow">
+          <div class="step"><b>문제정의</b><small>타깃/단위/기간</small></div>
+          <div class="step"><b>피처</b><small>집계·전처리</small></div>
+          <div class="step"><b>학습</b><small>CV/튜닝</small></div>
+          <div class="step"><b>배포</b><small>서빙/모니터링</small></div>
+        </div>
+        <div class="cap">머신러닝 프로젝트는 “모델”이 아니라 “파이프라인”이 성패를 좌우한다.</div>
+      </div>
+
+      <!-- ✅ 핀테크 활용 추가 -->
+      <div class="fintech">
+        <p class="title"><strong>핀테크에서의 활용(2부: 표형 ML이 강한 영역)</strong></p>
+        <ul>
+          <li><strong>신용/리스크 스코어링</strong>: 고객의 소득·부채·거래패턴·연체이력 등 표형 특징으로 연체확률(PD) 예측</li>
+          <li><strong>사기탐지(FDS)</strong>: 결제/이체의 속도·빈도·디바이스·지역·시간대 특징으로 이상 거래 분류</li>
+          <li><strong>개인화 추천</strong>: 고객-상품 상호작용(클릭/가입/해지) 기반으로 적합 상품 추천(기본은 트리/랭킹 모델부터)</li>
+          <li><strong>운영 최적화</strong>: 콜센터/심사 인력 수요 예측, 연체 회수 우선순위 산정(처방/우선순위 모델)</li>
+          <li><strong>설명가능성</strong>: 금융은 “왜 거절/승인인가?”가 중요 → SHAP 등으로 피처 근거를 함께 제공</li>
+        </ul>
+      </div>
+
+    </section>
+
+    <!-- =========================
+         PART 3
+         ========================= -->
+    <section class="slide" id="data-part3">
+      <div class="kicker">
+        <span class="pill"><span class="dot"></span>PART 3</span>
+        <span class="pill">Deep Learning</span>
+        <span class="pill">Representation</span>
+      </div>
+      <h2>3부. 딥러닝 기반 데이터 분석</h2>
+
+      <div class="callout violet">
+        <p class="raw">딥러닝은 “피처를 사람이 설계”하기보다, 데이터에서 **표현(Representation)**을 직접 학습한다.
+대량 데이터/복잡한 신호(이미지·텍스트·음성)에서 특히 강하다.</p>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <p class="raw"><strong>핵심 개념</strong>
+- 손실함수(Loss): 무엇을 잘 맞추게 할 것인가
+- 최적화(Optimizer): 어떻게 학습할 것인가
+- 일반화(Regularization): 과적합을 어떻게 막을 것인가</p>
+          <div class="tags">
+            <span class="tag">Loss</span><span class="tag">Optimizer</span><span class="tag">Regularization</span>
+          </div>
+        </div>
+        <div class="card">
+          <p class="raw"><strong>대표 구조</strong>
+- MLP: 표형/기본
+- CNN: 이미지/공간 패턴
+- RNN/LSTM: 순서 데이터(최근은 Transformer로 대체)</p>
+          <div class="tags">
+            <span class="tag">MLP</span><span class="tag">CNN</span><span class="tag">Transformer</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <p class="raw"><strong>딥러닝 실무 포인트</strong>
+- 데이터 라벨 품질이 성능의 상한선을 결정
+- 증강(Augmentation)과 정규화가 중요
+- 학습/검증 분리(누수 방지) + Early Stopping
+- 배포 시 지연시간/비용 고려(경량화: distillation/quantization)</p>
+      </div>
+
+      <!-- ✅ 핀테크 활용 추가 -->
+      <div class="fintech">
+        <p class="title"><strong>핀테크에서의 활용(3부: DL이 특히 유리한 데이터)</strong></p>
+        <ul>
+          <li><strong>텍스트</strong>: 민원/상담 로그 분류(불만 유형, 긴급도), 공시/뉴스 감성·이슈 추출(주의: 투자 권유와는 별개)</li>
+          <li><strong>시계열</strong>: 거래 시퀀스 기반 계정탈취/이상 징후 탐지(“행동의 연속성”을 학습)</li>
+          <li><strong>음성</strong>: 콜센터 STT 후 “고객 감정/불만/해지 의도” 탐지 및 상담 품질 평가</li>
+          <li><strong>경량화</strong>: 모바일 앱/엣지 환경에서 동작시키려면 distillation/quantization이 실제 비용 절감 포인트</li>
+        </ul>
+      </div>
+
+
+    </section>
+
+    <!-- =========================
+         PART 4
+         ========================= -->
+    <section class="slide" id="data-part4">
+      <div class="kicker">
+        <span class="pill"><span class="dot"></span>PART 4</span>
+        <span class="pill">LLM</span>
+        <span class="pill">RAG</span>
+      </div>
+      <h2>4부. LLM 기반 데이터 분석</h2>
+
+      <div class="callout">
+        <p class="raw">LLM은 텍스트를 “이해”한다기보다, 대규모 텍스트에서 학습한 패턴으로 **다음 토큰을 예측**한다.
+데이터 분석에서는 LLM을 ‘예측기’뿐 아니라 **문서 이해·요약·분류·질의응답·코딩 보조**에 활용한다.</p>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <p class="raw"><strong>LLM이 잘하는 것</strong>
+- 자연어 요약/정리/분류
+- 규칙이 복잡한 텍스트 라벨링 보조
+- SQL/파이썬 초안 생성 및 디버깅 힌트</p>
+          <div class="tags">
+            <span class="tag">Summarization</span><span class="tag">NL2SQL</span><span class="tag">Label Assist</span>
+          </div>
+        </div>
+        <div class="card">
+          <p class="raw"><strong>LLM의 위험</strong>
+- 할루시네이션(근거 없는 생성)
+- 최신성/사실성 보장 어려움
+- 개인정보/보안 이슈</p>
+          <div class="tags">
+            <span class="tag">Hallucination</span><span class="tag">Privacy</span><span class="tag">Safety</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <p class="raw"><strong>RAG(검색 증강 생성) 패턴</strong>
+LLM이 “기억”으로 답하게 하지 말고, 먼저 검색으로 근거를 가져온 뒤 그 근거만으로 답하게 만든다.
+- (1) 문서 청킹/임베딩 → (2) 유사도 검색 → (3) 근거 컨텍스트로 생성
+- 결과: 사실성↑, 출처 제시 가능</p>
+      </div>
+
+      <div class="diagram">
+        <div class="flow">
+          <div class="step"><b>Ingest</b><small>문서 수집</small></div>
+          <div class="step"><b>Embed</b><small>벡터화</small></div>
+          <div class="step"><b>Retrieve</b><small>검색</small></div>
+          <div class="step"><b>Generate</b><small>근거 기반 답변</small></div>
+        </div>
+        <div class="cap">LLM을 “근거 기반”으로 운용할 때, 데이터 분석/업무 자동화에 안전하게 쓸 수 있다.</div>
+      </div>
+
+      <!-- ✅ 핀테크 활용 추가 -->
+      <div class="fintech">
+        <p class="title"><strong>핀테크에서의 활용(4부: LLM/RAG가 강한 업무)</strong></p>
+        <ul>
+          <li><strong>규정/약관 Q&A</strong>: 내부 규정·상품설명서·FAQ를 RAG로 연결해 “근거 있는 답변” 제공</li>
+          <li><strong>고객 상담 자동화</strong>: 상담 시나리오/스크립트 추천, 문의 분류, 상담 요약(단, 개인정보 마스킹/접근통제 필수)</li>
+          <li><strong>문서 처리</strong>: 심사 서류(설명서/증빙) 핵심 항목 추출 → 업무 처리 시간 단축</li>
+          <li><strong>데이터 분석 보조</strong>: NL2SQL로 탐색 쿼리 초안 생성, 지표 정의 문장화, 리포트 초안 작성</li>
+          <li><strong>가드레일</strong>: “출처 없는 생성 금지”, “민감정보 차단”, “금융 조언/투자 권유 제한” 같은 정책을 함께 설계</li>
+        </ul>
+      </div>
+
+
+    </section>
+
+    <!-- =========================
+         PART 5
+         ========================= -->
+    <section class="slide" id="data-part5">
+      <div class="kicker">
+        <span class="pill"><span class="dot"></span>PART 5</span>
+        <span class="pill">Vision</span>
+        <span class="pill">Multimodal</span>
+      </div>
+      <h2>5부. Vision / 멀티모달 데이터 분석</h2>
+
+      <div class="callout warn">
+        <p class="raw">Vision 분석은 이미지/영상에서 패턴을 찾아 **분류·탐지·분할·추적**을 수행한다.
+최근에는 텍스트+이미지를 함께 다루는 **멀티모달(vision-language)**이 빠르게 확산 중이다.</p>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <p class="raw"><strong>대표 과제</strong>
+- Image Classification: 이미지 분류
+- Object Detection: 물체 위치/종류
+- Segmentation: 픽셀 단위 분할
+- OCR: 글자 인식 및 구조화</p>
+          <div class="tags">
+            <span class="tag">Classification</span><span class="tag">Detection</span><span class="tag">Segmentation</span><span class="tag">OCR</span>
+          </div>
+        </div>
+        <div class="card">
+          <p class="raw"><strong>실무 포인트</strong>
+- 라벨링 비용이 큼 → 액티브 러닝/반자동 라벨링
+- 데이터 편향/도메인 차이(조명·각도) 대응
+- 배포 비용(서빙/GPU) 고려한 경량화</p>
+          <div class="tags">
+            <span class="tag">Labeling</span><span class="tag">Bias</span><span class="tag">Deployment</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <p class="raw"><strong>멀티모달(LLM+Vision) 활용 예</strong>
+- 이미지 설명/요약(리포트 자동화)
+- 문서 이미지(PDF 스캔)에서 표/키값 추출
+- “이미지 + 질문” 형태의 QA(지원/검수 자동화)</p>
+      </div>
+
+      <!-- ✅ 핀테크 활용 추가 -->
+      <div class="fintech">
+        <p class="title"><strong>핀테크에서의 활용(5부: Vision/멀티모달)</strong></p>
+        <ul>
+          <li><strong>KYC/서류 자동화</strong>: 신분증/증빙 서류 OCR → 항목 추출(이름/번호/발급기관) + 진위/품질 체크(흐림/가림)</li>
+          <li><strong>영수증/세금계산서</strong>: 경비처리·소득공제 입력 자동화(분류 + 금액/가맹점/일자 추출)</li>
+          <li><strong>문서 QA</strong>: 스캔 PDF에서 표/조항을 찾아 “이 항목이 어디에 있나요?” 같은 질의응답</li>
+          <li><strong>부정 방지</strong>: 계정 생성 시 제출 이미지(프로필/서류) 중복·위변조 탐지(단, 규제·인권 이슈 고려 필요)</li>
+        </ul>
+      </div>
+
+    </section>
+
+    <!-- =========================
+         PART 6
+         ========================= -->
+    <section class="slide" id="data-part6">
+      <div class="kicker">
+        <span class="pill"><span class="dot"></span>PART 6</span>
+        <span class="pill">직군</span>
+        <span class="pill">커리어 로드맵</span>
+      </div>
+      <h2>6부. 데이터 분석 직군과 커리어 로드맵</h2>
+
+      <div class="callout">
+        <p class="raw">데이터 관련 직무는 모두 “데이터를 다룬다”는 공통점이 있지만,
+<strong>어디에 더 집중하는가(분석 · 모델 · 시스템 · 운영)</strong>에 따라 역할이 명확히 나뉜다.
+약자가 아니라 <strong>실제 업무 관점</strong>에서 이해하는 것이 중요하다.</p>
+      </div>
+
+      <div class="grid3">
+        <div class="card">
+          <p class="raw"><strong>데이터 분석가 (Data Analyst)</strong>
+- 비즈니스 문제를 데이터로 해석하고 지표로 설명
+- KPI 정의, 대시보드, 정기/비정기 리포트 작성
+- 실험(A/B Test) 결과 분석 및 의사결정 지원
+→ “무슨 일이 일어났는가, 왜 그런가”를 설명하는 역할</p>
+          <div class="tags">
+            <span class="tag">SQL</span>
+            <span class="tag">통계</span>
+            <span class="tag">EDA</span>
+            <span class="tag">BI 도구</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <p class="raw"><strong>데이터 사이언티스트 (Data Scientist)</strong>
+- 예측/최적화 문제를 수학·통계·머신러닝으로 해결
+- 분류·회귀·추천·이상탐지 모델 설계
+- 피처 엔지니어링 및 모델 성능 평가·해석
+→ “앞으로 무엇이 일어날지, 어떤 선택이 좋은지”를 모델로 답하는 역할</p>
+          <div class="tags">
+            <span class="tag">머신러닝</span>
+            <span class="tag">모델링</span>
+            <span class="tag">피처 엔지니어링</span>
+            <span class="tag">평가지표</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <p class="raw"><strong>머신러닝 엔지니어 (Machine Learning Engineer)</strong>
+- 학습된 모델을 실제 서비스에서 사용 가능하도록 구현
+- 모델 API 개발, 배포, 성능/지연시간 관리
+- 모델 모니터링 및 재학습 파이프라인 구축
+→ “모델을 코드와 시스템으로 안정적으로 운영”하는 역할</p>
+          <div class="tags">
+            <span class="tag">모델 서빙</span>
+            <span class="tag">API</span>
+            <span class="tag">MLOps</span>
+            <span class="tag">모니터링</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid3" style="margin-top:12px">
+        <div class="card">
+          <p class="raw"><strong>데이터 엔지니어 (Data Engineer)</strong>
+- 데이터 수집·저장·가공 파이프라인 설계 및 운영
+- 데이터 웨어하우스/레이크 모델링
+- 대용량 배치 및 실시간 스트리밍 처리
+→ “분석과 모델이 돌아갈 수 있는 데이터 기반을 만드는 역할”</p>
+          <div class="tags">
+            <span class="tag">ETL/ELT</span>
+            <span class="tag">데이터 모델링</span>
+            <span class="tag">배치/스트리밍</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <p class="raw"><strong>LLM 엔지니어 (Large Language Model Engineer)</strong>
+- 대규모 언어모델을 활용한 서비스 설계
+- RAG(검색 증강 생성), 에이전트, 툴 연동
+- 프롬프트 설계, 평가, 안전성·보안 관리
+→ “언어 모델을 업무 자동화·지식 시스템으로 제품화”하는 역할</p>
+          <div class="tags">
+            <span class="tag">LLM</span>
+            <span class="tag">RAG</span>
+            <span class="tag">프롬프트 설계</span>
+            <span class="tag">평가/가드레일</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <p class="raw"><strong>컴퓨터 비전 엔지니어 (Computer Vision Engineer)</strong>
+- 이미지·영상 데이터 분석 및 모델 개발
+- 분류·탐지·분할·OCR 문제 해결
+- 실제 환경(조명·각도·노이즈) 대응 및 배포
+→ “시각 정보를 데이터로 해석해 자동화”하는 역할</p>
+          <div class="tags">
+            <span class="tag">이미지 분석</span>
+            <span class="tag">객체 탐지</span>
+            <span class="tag">OCR</span>
+            <span class="tag">멀티모달</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout violet">
+        <p class="raw"><strong>현실적인 커리어 로드맵 (입문 → 취업)</strong>
+1) 공통 기초: SQL + 통계(분포·검정) + 파이썬 분석
+2) 분석 역량: EDA → 분류/회귀 프로젝트 1~2개
+3) 방향 선택:
+   - 분석 중심 → 데이터 분석가
+   - 모델 중심 → 데이터 사이언티스트
+   - 시스템 중심 → 머신러닝/데이터 엔지니어
+4) 심화 선택: LLM 또는 Vision 중 한 분야를 “작게라도 끝까지 제품화”</p>
+      </div>
+
+      <!-- ✅ 핀테크 활용 추가 -->
+      <div class="fintech">
+        <p class="title"><strong>핀테크 취업 관점 체크포인트(6부)</strong></p>
+        <ul>
+          <li><strong>분석가</strong>: “지표 정의→원인 분석→실험 설계”를 말로 설명할 수 있어야 함(퍼널/코호트/AB)</li>
+          <li><strong>DS</strong>: “평가/임계값/비용”을 함께 설계(예: 사기탐지에서 FP 비용이 너무 크면 운영이 망가짐)</li>
+          <li><strong>DE</strong>: 거래 데이터는 품질/정합성이 핵심(중복, 지연 도착, 재처리, 감사 로그)</li>
+          <li><strong>MLE/LLM</strong>: 개인정보·보안·접근통제·모니터링까지 포함한 “운영 설계” 경험이 강점</li>
+        </ul>
+        <div class="tagline">핀테크는 “정확도”만큼이나 <strong>규제/보안/운영</strong>을 함께 보는 사람이 채용에 강합니다.</div>
+      </div>
+    </section>
+
+    <!-- =========================
+         CONCLUSION
+         ========================= -->
+    <section class="slide" id="data-conclusion">
+      <div class="kicker">
+        <span class="pill"><span class="dot"></span>WRAP-UP</span>
+        <span class="pill">정리</span>
+      </div>
+      <h2>정리. 한 장으로 보는 데이터 분석 & 핀테크 적용</h2>
+
+      <div class="grid2">
+        <div class="card">
+          <p class="raw"><strong>분석 관점</strong>
+- 설명: KPI/리포트/원인
+- 예측: 위험/이탈/수요
+- 처방: 최적화/A-B
+- 제품화: 운영/모니터링</p>
+        </div>
+        <div class="card">
+          <p class="raw"><strong>핀테크 적용 관점</strong>
+- 리스크: 신용/연체/부정
+- 개인화: 추천/세그먼트
+- 자동화: 서류/상담/규정 QA
+- 운영: 드리프트/재학습/감사</p>
+        </div>
+      </div>
+
+      <div class="fintech">
+        <p class="title"><strong>실무 한 줄 결론</strong></p>
+        <ul>
+          <li>핀테크 데이터 분석은 <strong>“정확한 문제정의 + 데이터 품질 + 운영 설계”</strong>가 성능을 이깁니다.</li>
+          <li>모델은 도구일 뿐, 서비스는 <strong>정책(임계값/룰) + 모니터링 + 재처리</strong>까지 포함입니다.</li>
+        </ul>
+      </div>
+    </section>
+
+
+  </div>
+</body>
+</html>

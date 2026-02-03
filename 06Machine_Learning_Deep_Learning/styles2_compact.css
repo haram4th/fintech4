@@ -1,0 +1,250 @@
+:root{
+    --bg0:#070b18;
+    --bg1:#0b1024;
+    --card:#0f1733;
+    --card2:#0c1430;
+    --line:#1c2a57;
+    --text:#e8edf7;
+    --muted:#b7c2df;
+    --accent:#38bdf8;
+    --accent2:#22c55e;
+    --warn:#f59e0b;
+    --danger:#ef4444;
+    --violet:#a78bfa;
+    --cyan:#22d3ee;
+    --shadow: 0 14px 40px rgba(0,0,0,.35);
+    --radius: 18px;
+
+    /* ✅ 앵커 이동 시 헤더(제목+네비) 높이만큼 여백 */
+    --nav-offset: 70px;
+  }
+
+  *{box-sizing:border-box}
+  html,body{height:100%}
+
+  html{
+    scroll-padding-top: var(--nav-offset);
+    scroll-behavior: smooth;
+  }
+
+  body{
+    margin:0;
+    font-family: "Pretendard","Apple SD Gothic Neo","Noto Sans KR",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    background:
+      radial-gradient(900px 600px at 20% 0%, rgba(56,189,248,.18), transparent 55%),
+      radial-gradient(900px 600px at 80% 10%, rgba(167,139,250,.16), transparent 55%),
+      linear-gradient(180deg, var(--bg0), var(--bg1));
+    color:var(--text);
+    line-height:1.75;
+  }
+
+  .wrap{max-width:1180px;margin:0 auto;padding:22px 18px 72px}
+
+  /* =========================
+     ✅ 헤더(제목+네비)
+     ========================= */
+  .deck-header{
+    position: sticky;
+    top: 0;
+    z-index: 5;
+
+    margin-bottom: 14px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+
+    background: linear-gradient(180deg, rgba(15,23,51,.92), rgba(12,20,48,.78));
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(12px);
+    overflow: hidden;
+  }
+
+  .deck-title{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:16px;
+
+    padding:18px 18px 12px;
+    border-bottom: 1px solid rgba(148,163,184,.22);
+    margin:0;
+    position: static;
+    box-shadow:none;
+    background: transparent;
+    border-radius: 0;
+  }
+
+  .deck-title h1{margin:0;font-size:18px;letter-spacing:-.3px}
+  .deck-title .hint{color:var(--muted);font-size:12px;margin:0;text-align:right;line-height:1.5}
+
+  .deck-nav{
+    margin:0;
+    padding:10px 14px 14px;
+    border:0;
+    background: transparent;
+    box-shadow:none;
+    position: static;
+    top:auto;
+    z-index:auto;
+    backdrop-filter:none;
+  }
+
+  .deck-nav .row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    align-items:center;
+    justify-content:flex-start;
+  }
+
+  .deck-nav a{
+    text-decoration:none;
+    color:#cfefff;
+    font-size:12px;
+    padding:6px 10px;
+    border-radius:999px;
+    border:1px solid rgba(56,189,248,.35);
+    background: rgba(2,6,23,.32);
+    display:inline-flex;
+    gap:8px;
+    align-items:center;
+  }
+
+  .deck-nav a:hover{
+    border-color: rgba(56,189,248,.65);
+    background: rgba(56,189,248,.08);
+  }
+
+  .deck-nav .mini{
+    color: var(--muted);
+    font-size:12px;
+    margin-left:auto;
+  }
+
+  section.slide[id]{ scroll-margin-top: var(--nav-offset); }
+
+  /* =========================
+     슬라이드 / 카드 스타일
+     ========================= */
+  .slide{
+    padding:18px;border:1px solid var(--line);
+    background: linear-gradient(180deg, rgba(15,23,51,.78), rgba(12,20,48,.55));
+    border-radius:var(--radius);box-shadow:var(--shadow);
+    margin:14px 0;position:relative;overflow:hidden;
+  }
+
+  .slide:before{
+    content:"";position:absolute;inset:-120px -120px auto auto;width:320px;height:320px;
+    background: radial-gradient(circle at 30% 30%, rgba(56,189,248,.18), rgba(56,189,248,0) 60%);
+    transform: rotate(18deg);pointer-events:none;
+  }
+
+  .slide:after{
+    content:"";position:absolute;inset:auto auto -140px -140px;width:360px;height:360px;
+    background: radial-gradient(circle at 30% 30%, rgba(167,139,250,.16), rgba(167,139,250,0) 60%);
+    transform: rotate(-14deg);pointer-events:none;
+  }
+
+  .kicker{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap;position:relative;z-index:1}
+  .pill{
+    display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;
+    border:1px solid rgba(56,189,248,.35);background: rgba(2,6,23,.35);
+    color:#cfefff;font-size:12px;letter-spacing:.1px;
+  }
+  .pill .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px rgba(56,189,248,.12)}
+  h2{margin:4px 0 8px;font-size:26px;letter-spacing:-.5px;position:relative;z-index:1}
+  h3{margin:14px 0 8px;font-size:18px;color:#d8ecff;position:relative;z-index:1}
+  .sub{margin:0 0 10px;color:var(--muted);font-size:13px;position:relative;z-index:1}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;position:relative;z-index:1}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;position:relative;z-index:1}
+
+  @media (max-width: 980px){
+    .grid2,.grid3{grid-template-columns:1fr}
+    .deck-header{ position: static; }
+    html{ scroll-behavior:auto; }
+  }
+
+  .card{
+    border:1px solid var(--line);
+    background: linear-gradient(180deg, rgba(6,10,26,.65), rgba(15,23,51,.58));
+    border-radius:16px;padding:14px;position:relative;z-index:1;
+  }
+  .card strong{color:#f0f7ff}
+  .card p{margin:6px 0}
+  .card ul{margin:6px 0 0;padding-left:18px}
+  .card li{margin:5px 0}
+
+  .callout{
+    border:1px solid rgba(56,189,248,.35);
+    background: linear-gradient(90deg, rgba(56,189,248,.10), rgba(2,6,23,.25));
+    border-left:6px solid var(--accent);border-radius:14px;padding:12px;margin:10px 0;position:relative;z-index:1;
+    /* ✅ Callout 내부도 폰트 강제 적용 */
+    font-family: "Pretendard","Apple SD Gothic Neo","Noto Sans KR",sans-serif !important;
+  }
+  .callout.warn{border-color:rgba(245,158,11,.35);border-left-color:var(--warn);
+    background: linear-gradient(90deg, rgba(245,158,11,.10), rgba(2,6,23,.25));}
+  .callout.danger{border-color:rgba(239,68,68,.35);border-left-color:var(--danger);
+    background: linear-gradient(90deg, rgba(239,68,68,.10), rgba(2,6,23,.25));}
+  .callout.violet{border-color:rgba(167,139,250,.35);border-left-color:var(--violet);
+    background: linear-gradient(90deg, rgba(167,139,250,.10), rgba(2,6,23,.25));}
+  .callout p{margin:8px 0;}
+  .callout ul{margin:10px 0 0;padding-left:18px;}
+  .callout li{margin:6px 0;}
+  .callout .mini{margin-top:8px;}
+
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .tag{font-size:12px;padding:4px 8px;border-radius:10px;border:1px solid rgba(148,163,184,.35);
+    background: rgba(2,6,23,.32);color:#d7e7ff;}
+
+  .flow{display:flex;flex-wrap:wrap;gap:10px;align-items:stretch;margin:8px 0 0;position:relative;z-index:1}
+  .step{flex:1 1 180px;border:1px dashed rgba(148,163,184,.45);background: rgba(2,6,23,.28);
+    border-radius:14px;padding:12px;text-align:center;}
+  .step b{display:block;font-size:14px}
+  .step small{color:var(--muted)}
+
+  .divider{height:1px;background: rgba(148,163,184,.22);margin:10px 0;border:0}
+
+  .diagram{border:1px solid rgba(56,189,248,.22);background: linear-gradient(180deg, rgba(56,189,248,.07), rgba(2,6,23,.22));
+    border-radius:16px;padding:12px;margin-top:10px;position:relative;z-index:1;}
+  .diagram .cap{margin-top:8px;color:var(--muted);font-size:12px;line-height:1.5}
+
+  svg{width:100%;height:auto;display:block}
+
+  /* ✅ 수정: SVG 내부 텍스트 폰트 강제 적용 */
+  svg text {
+    font-family: "Pretendard","Apple SD Gothic Neo","Noto Sans KR",sans-serif !important;
+    fill: var(--text);
+  }
+
+  /* ✅ 수정: .raw 및 내부 요소들에 고딕체 강제 적용 (!important) */
+  .raw, .raw * {
+    font-family: "Pretendard","Apple SD Gothic Neo","Noto Sans KR",sans-serif !important;
+    font-style: normal !important; /* MathJax가 만든 이탤릭 강제 해제 */
+  }
+
+  .raw {
+    white-space: normal;
+    word-break: keep-all;
+    margin: 0;
+    font-size: 15px;
+  }
+
+  p.raw {
+    white-space: pre-wrap;
+    word-break: keep-all;
+    margin: 0;
+    font-size: 15px;
+  }
+
+  /* 혹시 MathJax가 렌더링되더라도 폰트를 강제로 되돌림 */
+  .raw mjx-container {
+    font-family: inherit !important;
+  }
+
+  mjx-container[jax="CHTML"]{font-size:105%;color:var(--text)}
+
+  @media print{
+    body{background:#fff !important;color:#000}
+    .deck-header{position:static; box-shadow:none;}
+    .slide{break-inside:avoid;page-break-inside:avoid;box-shadow:none}
+  }

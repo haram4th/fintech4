@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>핀테크 데이터 분석 및 서비스 기획</title>
+
+  <link rel="stylesheet" href="styles2_compact.css" />
+
+  <script>
+    window.MathJax = {
+      tex: {
+        // ✅ $ 기호는 절대 수식으로 인식하지 않음. 오직 \( ... \) 만 허용.
+        inlineMath: [['\\(', '\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+        processEscapes: true,
+        // ✅ 텍스트 내의 영문자가 수식 변수($x$)로 오인되지 않도록 설정
+        processEnvironments: false 
+      },
+      options: {
+        // ✅ 스크립트, 스타일 태그 등은 건너뜀
+        skipHtmlTags: ['script','noscript','style','textarea','pre','code']
+      }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+</head>
+
+<body>
+
+  <div class="wrap">
+
+  <header class="deck-header">
+    <div class="deck-title">
+      <h1>핀테크 데이터 분석 및 서비스 기획 강의안</h1>
+    </div>
+
+    <nav class="deck-nav" aria-label="파트 네비게이션">
+      <div class="row">
+        <a href="#part0">0부 · 핀테크 개념</a>
+        <a href="#part1">1부 · 전자금융(FDS)</a>
+        <a href="#part2">2부 · 자산관리(로보)</a>
+        <a href="#part3">3부 · 중개/추천</a>
+        <a href="#part4">4부 · 금융데이터(대안신용)</a>
+        <a href="#part5">5부 · 보안/RegTech</a>
+        <a href="#conclusion">결론</a>
+        <span class="mini">클릭하면 해당 파트로 이동</span>
+      </div>
+    </nav>
+  </header>
+
+<section class="slide" id="part0">
+  <div class="kicker">
+    <span class="pill"><span class="dot"></span>PART 0</span>
+    <span class="pill">핀테크 개요</span>
+    <span class="pill">산업 분류</span>
+  </div>
+  <h2>0부. 핀테크 개념과 주요 분야</h2>
+
+  <div class="callout">
+    <p class="raw">핀테크(FinTech)는 단순히 금융 서비스를 디지털화한 것이 아니라, <strong>데이터를 기반으로 금융 의사결정을 자동화·고도화하는 산업</strong>이다.
+즉, 핀테크 서비스의 본질은 “돈을 다루는 UI”가 아니라 <strong>Financial Decision System(금융 의사결정 시스템)</strong>이다.</p>
+  </div>
+
+  <div class="card">
+    <p class="raw">전통 금융 vs 핀테크의 차이
+- 전통 금융: 규칙 기반 + 사람 중심 의사결정
+- 핀테크: 데이터 기반 + 알고리즘 중심 의사결정
+
+핀테크는 고객 행동, 거래, 외부 데이터를 실시간으로 수집·분석하여
+“지금 이 순간, 이 고객에게, 어떤 금융 판단을 내릴 것인가”를 자동으로 결정한다.</p>
+  </div>
+
+  <hr class="divider"/>
+
+  <h3>0.1 핀테크 산업을 나누는 기준</h3>
+  <p class="sub">핀테크는 기술이 아니라 “어떤 금융 의사결정을 자동화하느냐”에 따라 분류된다.</p>
+
+  <div class="grid2">
+    <div class="card">
+      <p class="raw"><strong>의사결정 대상</strong>
+- 결제/송금이 정상인가?
+- 이 고객에게 얼마를 빌려줄 수 있는가?
+- 어떤 상품을 추천해야 하는가?
+- 이 사용자는 지금 안전한가?</p>
+    </div>
+    <div class="card">
+      <p class="raw"><strong>의사결정 조건</strong>
+- 실시간성(Real-time vs Batch)
+- 오류 비용(Cost of Error)
+- 규제/설명 가능성
+- 사용자 경험(UX) 영향도</p>
+    </div>
+  </div>
+
+  <hr class="divider"/>
+
+  <h3>0.2 핀테크 주요 5대 분야 개요</h3>
+  <p class="sub">본 강의안은 핀테크 산업을 다음 5가지 핵심 분야로 구분한다.</p>
+
+  <div class="grid3">
+    <div class="card">
+      <p class="raw"><strong>① 전자금융업</strong>
+결제·송금·페이먼트
+핵심 질문:
+“이 거래는 정상인가, 사기인가?”</p>
+    </div>
+    <div class="card">
+      <p class="raw"><strong>② 자산관리업</strong>
+로보어드바이저·투자 자동화
+핵심 질문:
+“이 고객에게 최적의 자산 배분은 무엇인가?”</p>
+    </div>
+    <div class="card">
+      <p class="raw"><strong>③ 금융상품 중개·판매</strong>
+추천·비교·플랫폼
+핵심 질문:
+“이 고객에게 지금 가장 적합한 금융상품은?”</p>
+    </div>
+    <div class="card">
+      <p class="raw"><strong>④ 금융데이터 산업</strong>
+대안신용평가·MyData
+핵심 질문:
+“이 고객의 신용을 데이터로 어떻게 정의할 것인가?”</p>
+    </div>
+    <div class="card">
+      <p class="raw"><strong>⑤ 보안·RegTech</strong>
+인증·이상행위·규제 대응
+핵심 질문:
+“이 사용자를 얼마나 신뢰할 수 있는가?”</p>
+    </div>
+  </div>
+
+  <hr class="divider"/>
+
+  <h3>0.3 모든 핀테크 서비스의 공통 구조</h3>
+
+  <div class="diagram">
+    <svg viewBox="0 0 980 260" role="img" aria-label="핀테크 공통 구조">
+      <rect x="40" y="60" width="900" height="120" rx="18"
+            fill="rgba(2,6,23,.30)" stroke="rgba(56,189,248,.22)"/>
+      <text x="490" y="92" font-size="15" text-anchor="middle" fill="#cfefff">
+        Data → Model → Policy → UX → Trust
+      </text>
+
+      <rect x="70"  y="120" width="150" height="50" rx="14"
+            fill="rgba(56,189,248,.10)" stroke="rgba(56,189,248,.25)"/>
+      <rect x="245" y="120" width="150" height="50" rx="14"
+            fill="rgba(167,139,250,.10)" stroke="rgba(167,139,250,.25)"/>
+      <rect x="420" y="120" width="150" height="50" rx="14"
+            fill="rgba(245,158,11,.10)" stroke="rgba(245,158,11,.25)"/>
+      <rect x="595" y="120" width="150" height="50" rx="14"
+            fill="rgba(34,197,94,.10)" stroke="rgba(34,197,94,.25)"/>
+      <rect x="770" y="120" width="150" height="50" rx="14"
+            fill="rgba(239,68,68,.08)" stroke="rgba(239,68,68,.22)"/>
+
+      <text x="145" y="150" font-size="13" text-anchor="middle" fill="#e8edf7">Data</text>
+      <text x="320" y="150" font-size="13" text-anchor="middle" fill="#e8edf7">Model</text>
+      <text x="495" y="150" font-size="13" text-anchor="middle" fill="#e8edf7">Policy</text>
+      <text x="670" y="150" font-size="13" text-anchor="middle" fill="#e8edf7">UX</text>
+      <text x="845" y="150" font-size="13" text-anchor="middle" fill="#e8edf7">Trust</text>
+    </svg>
+    <div class="cap">모든 핀테크 서비스는 결국 “데이터 기반 의사결정 루프”를 제품으로 구현한다.</div>
+  </div>
+</section>
+
+<section class="slide" id="part1">
+  <div class="kicker">
+    <span class="pill"><span class="dot"></span>PART 1</span>
+    <span class="pill">전자금융업</span>
+    <span class="pill">FDS</span>
+  </div>
+  <h2>1부. 전자금융업: FDS와 설명 가능한 AI (XAI)</h2>
+
+  <div class="callout violet">
+    <div class="raw">
+      <p><strong>왜 이 거래가 차단됐는지</strong>를 금융사는 고객과 규제기관에 설명해야 한다. 단순히 “AI가 위험하다고 판단했다”가 아니라, <strong>어떤 요인이 위험 점수를 올렸는지</strong>가 핵심이다.</p>
+
+      <p>이를 위해 <strong>설명 가능한 인공지능(Explainable AI, XAI)</strong>을 사용한다. XAI는 모델의 예측(예: 사기 위험도 0~1)을 <strong>요인(특성)별 기여도</strong>로 쪼개 보여준다.</p>
+
+      <ul>
+        <li><strong>기여도(contribution)</strong>: “해외 IP 접속(+0.40)”, “심야 거래(+0.30)”처럼 각 입력 특성이 최종 점수에 더한 영향.</li>
+        <li><strong>SHAP(Shapley Additive Explanations)</strong>: 게임이론의 <em>샤플리 값</em>을 이용해 각 특성의 기여도를 공정하고 일관되게 계산(전역/개별 설명 모두에 강점).</li>
+        <li><strong>LIME(Local Interpretable Model-agnostic Explanations)</strong>: <em>특정 거래 1건</em> 주변에서 단순한 해석 모델(예: 선형 모델)을 임시로 학습해 “이번 예측이 왜 이렇게 나왔는지”를 국소적으로 설명.</li>
+      </ul>
+
+      <p>실무에서는 이 기여도를 그대로 보여주기보다, 고객이 이해하기 쉬운 문장으로 바꿔 UI/상담 스크립트에 쓴다.</p>
+      <p class="mini">예) “평소와 다른 심야 시간대에 해외 IP에서 접속했고, 환금성 상품 결제가 시도되어 위험 점수가 높아 추가 인증/차단되었습니다.”</p>
+    </div>
+  </div>
+
+  <div class="diagram">
+    <svg viewBox="0 0 980 270" role="img" aria-label="XAI 도식">
+      <rect x="40" y="40" width="900" height="70" rx="18" fill="rgba(2,6,23,.35)" stroke="rgba(167,139,250,.28)"/>
+      <text x="490" y="80" font-size="15" text-anchor="middle" fill="#e8edf7">Black-box → XAI(SHAP/LIME) → 고객 친화 설명</text>
+
+      <rect x="40" y="135" width="420" height="110" rx="18" fill="rgba(167,139,250,.10)" stroke="rgba(167,139,250,.28)"/>
+      <text x="250" y="165" font-size="14" text-anchor="middle" fill="#f0eaff">기여도(예)</text>
+      <text x="250" y="192" font-size="12" text-anchor="middle" fill="rgba(183,194,223,1)">심야 거래 +0.30</text>
+      <text x="250" y="212" font-size="12" text-anchor="middle" fill="rgba(183,194,223,1)">해외 IP +0.40</text>
+      <text x="250" y="232" font-size="12" text-anchor="middle" fill="rgba(183,194,223,1)">상품권 구매 +0.15</text>
+
+      <rect x="520" y="135" width="420" height="110" rx="18" fill="rgba(56,189,248,.10)" stroke="rgba(56,189,248,.28)"/>
+      <text x="730" y="165" font-size="14" text-anchor="middle" fill="#cfefff">자연어 설명(예)</text>
+      <text x="730" y="192" font-size="12" text-anchor="middle" fill="rgba(183,194,223,1)">“평소와 다른 심야 거래”</text>
+      <text x="730" y="212" font-size="12" text-anchor="middle" fill="rgba(183,194,223,1)">“처음 접속한 해외 IP”</text>
+      <text x="730" y="232" font-size="12" text-anchor="middle" fill="rgba(183,194,223,1)">“환금성 상품 구매 시도”</text>
+
+      <path d="M 460 190 L 520 190" stroke="rgba(56,189,248,.65)" stroke-width="5"/>
+      <polygon points="520,190 506,182 506,198" fill="rgba(56,189,248,.65)"/>
+    </svg>
+    <div class="cap">도식: XAI 결과를 “설명 문장”으로 변환해 신뢰 확보</div>
+  </div>
+</section>
+
+<section class="slide" id="part2">
+  <div class="kicker">
+    <span class="pill"><span class="dot"></span>PART 2</span>
+    <span class="pill">자산관리업</span>
+    <span class="pill">로보어드바이저</span>
+  </div>
+  <h2>2부. 자산관리업: 로보어드바이저와 알고리즘 기반 투자의 대중화</h2>
+
+  <div class="callout">
+    <p class="raw">로보어드바이저는 KYC → 자산배분 → 자동매매 → 리밸런싱을 데이터 파이프라인으로 자동화한다.</p>
+  </div>
+
+  <div class="diagram">
+    <svg viewBox="0 0 980 240" role="img" aria-label="로보어드바이저 파이프라인">
+      <rect x="40" y="60" width="900" height="120" rx="18" fill="rgba(2,6,23,.30)" stroke="rgba(56,189,248,.22)"/>
+      <text x="490" y="92" font-size="15" text-anchor="middle" fill="#cfefff">Robo-Advisor End-to-End Pipeline</text>
+
+      <rect x="70"  y="110" width="200" height="52" rx="14" fill="rgba(56,189,248,.12)" stroke="rgba(56,189,248,.22)"/>
+      <rect x="290" y="110" width="200" height="52" rx="14" fill="rgba(34,197,94,.12)" stroke="rgba(34,197,94,.22)"/>
+      <rect x="510" y="110" width="200" height="52" rx="14" fill="rgba(167,139,250,.12)" stroke="rgba(167,139,250,.22)"/>
+      <rect x="730" y="110" width="200" height="52" rx="14" fill="rgba(245,158,11,.12)" stroke="rgba(245,158,11,.22)"/>
+
+      <text x="170" y="143" font-size="13" text-anchor="middle" fill="#e8edf7">KYC</text>
+      <text x="390" y="143" font-size="13" text-anchor="middle" fill="#e8edf7">자산배분</text>
+      <text x="610" y="143" font-size="13" text-anchor="middle" fill="#e8edf7">자동매매</text>
+      <text x="830" y="143" font-size="13" text-anchor="middle" fill="#e8edf7">리밸런싱</text>
+
+      <path d="M 270 136 L 290 136" stroke="rgba(148,163,184,.55)" stroke-width="4" />
+      <polygon points="290,136 278,128 278,144" fill="rgba(148,163,184,.55)"/>
+      <path d="M 490 136 L 510 136" stroke="rgba(148,163,184,.55)" stroke-width="4" />
+      <polygon points="510,136 498,128 498,144" fill="rgba(148,163,184,.55)"/>
+      <path d="M 710 136 L 730 136" stroke="rgba(148,163,184,.55)" stroke-width="4" />
+      <polygon points="730,136 718,128 718,144" fill="rgba(148,163,184,.55)"/>
+    </svg>
+    <div class="cap">도식: KYC → 자산배분 → 자동매매 → 리밸런싱</div>
+  </div>
+
+  <div class="card">
+    <p class="raw">포트폴리오 최적화는 MPT(Mean-Variance) 기반으로 Efficient Frontier를 구성하고, 현실성/안정성을 위해 Black-Litterman(시장 균형 Π + 전망 Q, 신뢰도 Ω)을 활용할 수 있다.
+수식(예시): $$\mu_p = w^\top \mu,\quad \sigma_p^2 = w^\top \Sigma w$$</p>
+  </div>
+</section>
+
+<section class="slide" id="part3">
+  <div class="kicker">
+    <span class="pill"><span class="dot"></span>PART 3</span>
+    <span class="pill">중개/판매</span>
+    <span class="pill">추천 시스템</span>
+  </div>
+  <h2>3부. 금융상품 판매대리/중개업: 초개인화 추천 시스템</h2>
+
+  <div class="card">
+    <p class="raw">금융 추천은 구매 빈도가 낮고(Low Frequency), 영향이 크며(High Impact), 규제/신뢰가 핵심이다.
+문제: 희소성(Sparsity) + 콜드 스타트(Cold Start)</p>
+  </div>
+
+  <div class="diagram">
+    <svg viewBox="0 0 980 240" role="img" aria-label="추천 난이도">
+      <rect x="40" y="60" width="900" height="120" rx="18" fill="rgba(2,6,23,.30)" stroke="rgba(56,189,248,.22)"/>
+      <text x="490" y="92" font-size="15" text-anchor="middle" fill="#cfefff">금융 추천의 난이도</text>
+
+      <rect x="90" y="118" width="250" height="50" rx="14" fill="rgba(245,158,11,.14)" stroke="rgba(245,158,11,.25)"/>
+      <rect x="365" y="118" width="250" height="50" rx="14" fill="rgba(239,68,68,.12)" stroke="rgba(239,68,68,.25)"/>
+      <rect x="640" y="118" width="250" height="50" rx="14" fill="rgba(34,197,94,.12)" stroke="rgba(34,197,94,.25)"/>
+
+      <text x="215" y="149" font-size="13" text-anchor="middle" fill="#e8edf7">Low Frequency</text>
+      <text x="490" y="149" font-size="13" text-anchor="middle" fill="#e8edf7">High Impact</text>
+      <text x="765" y="149" font-size="13" text-anchor="middle" fill="#e8edf7">Trust Critical</text>
+    </svg>
+    <div class="cap">도식: 금융 추천은 "신뢰"가 제품 요건</div>
+  </div>
+
+  <div class="card">
+    <p class="raw">해법:
+- 협업 필터링(Matrix Factorization) + 암시적 피드백(조회/체류/스크롤/계산기 사용)
+- 하이브리드 추천(LightFM 등): 신규는 메타데이터 기반 → 행동 데이터 축적 후 CF 강화
+- MyData + RAG + LLM: “검색 근거” 기반으로만 문장 생성(할루시네이션 방지)</p>
+  </div>
+</section>
+
+<section class="slide" id="part4">
+  <div class="kicker">
+    <span class="pill"><span class="dot"></span>PART 4</span>
+    <span class="pill">금융데이터 산업</span>
+    <span class="pill">대안신용평가</span>
+  </div>
+  <h2>4부. 금융데이터 산업: 대안신용평가(ACSS)와 데이터 민주화</h2>
+
+  <div class="callout">
+    <p class="raw"><strong>씬 파일러(Thin Filer)</strong>의 금융 접근성을 높이기 위해 비금융 데이터를 활용해 상환 의지(Willingness)와 상환 능력(Capacity)을 추정한다.</p>
+  </div>
+
+  <div class="diagram">
+    <svg viewBox="0 0 980 260" role="img" aria-label="대안신용평가 개념">
+      <rect x="40" y="40" width="900" height="70" rx="18" fill="rgba(2,6,23,.35)" stroke="rgba(148,163,184,.35)"/>
+      <text x="490" y="82" font-size="15" text-anchor="middle" fill="#e8edf7">Thin Filer → 비금융 데이터 결합 → 신용평가 정교화</text>
+
+      <rect x="80" y="140" width="260" height="90" rx="18" fill="rgba(56,189,248,.10)" stroke="rgba(56,189,248,.25)"/>
+      <text x="210" y="172" font-size="14" text-anchor="middle" fill="#cfefff">비금융 데이터</text>
+      <text x="210" y="196" font-size="12" text-anchor="middle" fill="rgba(183,194,223,1)">통신/커머스/모빌리티…</text>
+
+      <rect x="360" y="140" width="260" height="90" rx="18" fill="rgba(34,197,94,.10)" stroke="rgba(34,197,94,.25)"/>
+      <text x="490" y="172" font-size="14" text-anchor="middle" fill="#dfffe9">Willingness</text>
+      <text x="490" y="196" font-size="12" text-anchor="middle" fill="rgba(183,194,223,1)">상환 의지</text>
+
+      <rect x="640" y="140" width="260" height="90" rx="18" fill="rgba(167,139,250,.10)" stroke="rgba(167,139,250,.25)"/>
+      <text x="770" y="172" font-size="14" text-anchor="middle" fill="#f0eaff">Capacity</text>
+      <text x="770" y="196" font-size="12" text-anchor="middle" fill="rgba(183,194,223,1)">상환 능력</text>
+    </svg>
+    <div class="cap">도식: 대안 데이터로 신용 사각지대 해소</div>
+  </div>
+
+  <div class="card">
+    <p class="raw">실무 포인트:
+- 데이터 동의/투명성 UX(무엇을, 왜 쓰는지)
+- 데이터 드리프트 모니터링(PSI, AUC, 승인율/부실률)
+- 공정성(Fairness): 특정 집단 차별 최소화 + 근거 제시</p>
+  </div>
+</section>
+
+<section class="slide" id="part5">
+  <div class="kicker">
+    <span class="pill"><span class="dot"></span>PART 5</span>
+    <span class="pill">보안/RegTech</span>
+    <span class="pill">Invisible Security</span>
+  </div>
+  <h2>5부. 보안/RegTech: 보이지 않는 보안(Invisible Security)의 제품화</h2>
+
+  <div class="callout">
+    <p class="raw">고객에게는 간편하게, 시스템은 더 엄격하게. 보안은 "보이는 인증"이 아니라 "지속적 신뢰 점수"로 이동한다.</p>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <p class="raw">eKYC (전자신원확인)
+- 신분증 OCR/진위확인 + 얼굴 매칭
+- Liveness(활동성)로 사진/영상 재생 공격 방지</p>
+    </div>
+    <div class="card">
+      <p class="raw">Behavioral Biometrics
+- 타이핑/스크롤/터치 패턴으로 연속 인증(Continuous Auth)
+- ATO(계정탈취) 조기 탐지</p>
+    </div>
+  </div>
+
+  <div class="diagram">
+    <svg viewBox="0 0 980 260" role="img" aria-label="Invisible security">
+      <rect x="40" y="40" width="900" height="70" rx="18" fill="rgba(2,6,23,.35)" stroke="rgba(148,163,184,.35)"/>
+      <text x="490" y="82" font-size="15" text-anchor="middle" fill="#e8edf7">Login(보이는 인증) → Session(연속 신뢰 점수) → Action(단계적 제어)</text>
+
+      <rect x="80" y="140" width="250" height="90" rx="18" fill="rgba(56,189,248,.10)" stroke="rgba(56,189,248,.25)"/>
+      <text x="205" y="172" font-size="14" text-anchor="middle" fill="#cfefff">eKYC</text>
+      <text x="205" y="196" font-size="12" text-anchor="middle" fill="rgba(183,194,223,1)">liveness + ID</text>
+
+      <rect x="365" y="140" width="250" height="90" rx="18" fill="rgba(167,139,250,.10)" stroke="rgba(167,139,250,.25)"/>
+      <text x="490" y="172" font-size="14" text-anchor="middle" fill="#f0eaff">Behavior</text>
+      <text x="490" y="196" font-size="12" text-anchor="middle" fill="rgba(183,194,223,1)">continuous auth</text>
+
+      <rect x="650" y="140" width="250" height="90" rx="18" fill="rgba(239,68,68,.10)" stroke="rgba(239,68,68,.25)"/>
+      <text x="775" y="172" font-size="14" text-anchor="middle" fill="#ffe5e5">Step-up</text>
+      <text x="775" y="196" font-size="12" text-anchor="middle" fill="rgba(183,194,223,1)">추가 인증/차단</text>
+
+      <path d="M 330 185 L 365 185" stroke="rgba(148,163,184,.55)" stroke-width="4"/>
+      <polygon points="365,185 353,178 353,192" fill="rgba(148,163,184,.55)"/>
+      <path d="M 615 185 L 650 185" stroke="rgba(148,163,184,.55)" stroke-width="4"/>
+      <polygon points="650,185 638,178 638,192" fill="rgba(148,163,184,.55)"/>
+    </svg>
+    <div class="cap">도식: 보안은 “마찰”이 아니라 “점수화된 신뢰”로 운영</div>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <p class="raw">AML/이상자금 흐름(예):
+- 그래프 분석(계좌/지갑 노드, 송금 엣지)
+- 군집/커뮤니티 탐지로 믹서/허브 계정 식별
+- 위험도 스코어링 → 계정 제한/보고 자동화</p>
+  </div>
+</section>
+
+<section class="slide" id="conclusion">
+  <div class="kicker">
+    <span class="pill"><span class="dot"></span>결론</span>
+    <span class="pill">Financial Decision System</span>
+  </div>
+  <h2>결론: 핀테크의 본질은 “의사결정 시스템”이다</h2>
+
+  <div class="callout">
+    <p class="raw">핀테크는 데이터 → 모델 → 정책 → UX → 신뢰로 이어지는 <strong>Financial Decision System</strong>을 제품화하는 산업이다.
+핵심은 “정확도”가 아니라, 고객/규제/운영을 함께 만족시키는 <strong>엔드투엔드 설계</strong>다.</p>
+  </div>
+
+  <div class="diagram">
+    <svg viewBox="0 0 980 320" role="img" aria-label="Data-Model-Policy-UX-Trust">
+      <rect x="40" y="50" width="900" height="220" rx="18" fill="rgba(2,6,23,.30)" stroke="rgba(56,189,248,.22)"/>
+      <text x="490" y="86" font-size="15" text-anchor="middle" fill="#cfefff">Data → Model → Policy → UX → Trust (Closed Loop)</text>
+
+      <rect x="70"  y="130" width="150" height="62" rx="14" fill="rgba(56,189,248,.10)" stroke="rgba(56,189,248,.25)"/>
+      <rect x="245" y="130" width="150" height="62" rx="14" fill="rgba(167,139,250,.10)" stroke="rgba(167,139,250,.25)"/>
+      <rect x="420" y="130" width="150" height="62" rx="14" fill="rgba(245,158,11,.10)" stroke="rgba(245,158,11,.25)"/>
+      <rect x="595" y="130" width="150" height="62" rx="14" fill="rgba(34,197,94,.10)" stroke="rgba(34,197,94,.25)"/>
+      <rect x="770" y="130" width="150" height="62" rx="14" fill="rgba(239,68,68,.08)" stroke="rgba(239,68,68,.22)"/>
+
+      <text x="145" y="168" font-size="13" text-anchor="middle" fill="#e8edf7">Data</text>
+      <text x="320" y="168" font-size="13" text-anchor="middle" fill="#e8edf7">Model</text>
+      <text x="495" y="168" font-size="13" text-anchor="middle" fill="#e8edf7">Policy</text>
+      <text x="670" y="168" font-size="13" text-anchor="middle" fill="#e8edf7">UX</text>
+      <text x="845" y="168" font-size="13" text-anchor="middle" fill="#e8edf7">Trust</text>
+
+      <path d="M 220 161 L 245 161" stroke="rgba(148,163,184,.55)" stroke-width="4"/>
+      <polygon points="245,161 233,154 233,168" fill="rgba(148,163,184,.55)"/>
+      <path d="M 395 161 L 420 161" stroke="rgba(148,163,184,.55)" stroke-width="4"/>
+      <polygon points="420,161 408,154 408,168" fill="rgba(148,163,184,.55)"/>
+      <path d="M 570 161 L 595 161" stroke="rgba(148,163,184,.55)" stroke-width="4"/>
+      <polygon points="595,161 583,154 583,168" fill="rgba(148,163,184,.55)"/>
+      <path d="M 745 161 L 770 161" stroke="rgba(148,163,184,.55)" stroke-width="4"/>
+      <polygon points="770,161 758,154 758,168" fill="rgba(148,163,184,.55)"/>
+
+      <path d="M 845 210 C 520 300, 220 300, 145 210" stroke="rgba(56,189,248,.35)" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <polygon points="145,210 162,204 160,220" fill="rgba(56,189,248,.55)"/>
+      <text x="490" y="252" font-size="12" text-anchor="middle" fill="rgba(183,194,223,1)">피드백 루프: 로그/라벨/정책 결과가 다시 데이터로 돌아가 모델·정책을 개선</text>
+    </svg>
+    <div class="cap">도식: 제품 = 의사결정 루프(피드백)까지 설계하는 것</div>
+  </div>
+</section>
+
+</div>
+</body>
+</html>

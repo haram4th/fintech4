@@ -1,0 +1,459 @@
+
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>데이터 전처리 이론 — 척도, 결측값 처리, 이상값 탐지·처리 (비전공자용)</title>
+  <style>
+:root{
+  --bg0:#070b18; --bg1:#0b1024; --card:#0f1733; --card2:#0c1430;
+  --line:#1c2a57; --text:#e8edf7; --muted:#b7c2df; --accent:#38bdf8;
+  --accent2:#22c55e; --warn:#f59e0b; --danger:#ef4444; --violet:#a78bfa;
+  --shadow: 0 12px 40px rgba(0,0,0,.45); --radius: 18px; --maxw: 1120px;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family: Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", "Apple SD Gothic Neo", Arial, sans-serif;
+  color:var(--text);
+  background: radial-gradient(1200px 800px at 20% 10%, rgba(56,189,248,.18), transparent 55%),
+              radial-gradient(900px 700px at 90% 30%, rgba(167,139,250,.12), transparent 55%),
+              linear-gradient(180deg, var(--bg0), var(--bg1));
+}
+a{color:var(--accent)}
+header{
+  position:sticky; top:0; z-index:10;
+  backdrop-filter: blur(10px);
+  background: rgba(7,11,24,.75);
+  border-bottom: 1px solid rgba(28,42,87,.7);
+}
+.nav{
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 14px 18px;
+  display:flex; gap:14px; align-items:center; justify-content:space-between;
+}
+.brand{display:flex; align-items:center; gap:12px;}
+.badge{
+  width:40px; height:40px; border-radius:14px;
+  background: linear-gradient(135deg, rgba(56,189,248,.95), rgba(167,139,250,.9));
+  box-shadow: var(--shadow);
+}
+h1{font-size:18px; margin:0; letter-spacing:-.2px;}
+.meta{font-size:12px; color:var(--muted);}
+.toc{display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;}
+.toc a{
+  text-decoration:none;
+  padding:8px 10px;
+  border:1px solid rgba(28,42,87,.8);
+  background: rgba(15,23,51,.6);
+  border-radius:999px;
+  font-size:13px;
+}
+.toc a:hover{border-color: rgba(56,189,248,.9)}
+main{max-width: var(--maxw); margin: 0 auto; padding: 26px 18px 64px;}
+.card{
+  background: linear-gradient(180deg, rgba(15,23,51,.92), rgba(12,20,48,.88));
+  border:1px solid rgba(28,42,87,.8);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 22px 22px;
+  margin: 16px 0;
+}
+.card h2{margin: 6px 0 12px; font-size: 24px; letter-spacing: -.2px;}
+.card h3{margin-top: 18px; font-size: 18px;}
+.card h4{margin-top: 16px; font-size: 16px; color: rgba(232,237,247,.95);}
+.card p, .card li{color: rgba(232,237,247,.92); line-height:1.75;}
+.card ul{padding-left: 1.15rem;}
+hr{border:none; height:1px; background: rgba(28,42,87,.75); margin: 18px 0;}
+table{width:100%; border-collapse: collapse; overflow:hidden; border-radius: 14px; border:1px solid rgba(28,42,87,.8); margin: 12px 0 6px;}
+th, td{padding: 10px 12px; border-bottom: 1px solid rgba(28,42,87,.65); vertical-align: top;}
+th{text-align:left; background: rgba(56,189,248,.10); color: rgba(232,237,247,.98);}
+tr:last-child td{border-bottom:none;}
+code{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  background: rgba(56,189,248,.12);
+  border: 1px solid rgba(56,189,248,.20);
+  padding: 2px 6px;
+  border-radius: 8px;
+}
+.kicker{
+  display:inline-block;
+  font-size:12px; letter-spacing:.2px;
+  padding:4px 10px; border-radius:999px;
+  border:1px solid rgba(28,42,87,.8);
+  background: rgba(15,23,51,.55);
+  color: var(--muted);
+}
+.callout{
+  margin: 12px 0; padding: 12px 14px;
+  border-left: 4px solid rgba(56,189,248,.75);
+  background: rgba(15,23,51,.55);
+  border-radius: 12px;
+}
+.grid{
+  display:grid; grid-template-columns: 1fr 1fr; gap:14px;
+}
+@media (max-width: 960px){ .grid{grid-template-columns: 1fr;} }
+.footer{color: var(--muted); font-size: 12px; margin-top: 18px; text-align:center;}
+.anchor{scroll-margin-top: 86px;}
+.small{font-size:13px; color: rgba(183,194,223,.95);}
+  </style>
+</head>
+<body>
+<header>
+  <div class="nav">
+    <div class="brand">
+      <div class="badge" aria-hidden="true"></div>
+      <div>
+        <h1>데이터 전처리 이론 — 척도 · 결측값 · 이상값 (비전공자용)</h1>
+        <div class="meta">실습 코드는 제외하고 “개념 + 어떤 함수/도구를 쓰는지 + 판단 기준(왜 그렇게 하는지)” 중심으로 정리 · 생성일: 2026-02-09</div>
+      </div>
+    </div>
+    <nav class="toc" aria-label="목차">
+      <a href="#scale">척도(자료의 종류)</a>
+      <a href="#missing">결측값</a>
+      <a href="#outliers">이상값</a>
+      <a href="#checklist">실무 체크리스트</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+<section class="card anchor" id="scale">
+  <span class="kicker">0. 데이터 이해</span>
+  <h2>척도의 종류(자료의 종류)</h2>
+  <p>전처리는 “무조건 깨끗하게 만드는 작업”이 아니라, <strong>데이터의 성격에 맞게</strong> 다듬는 과정입니다. 그래서 결측값/이상값을 다루기 전에 “이 데이터가 어떤 척도인지”를 먼저 정리합니다.</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width:18%;">척도 구분</th>
+        <th>특징</th>
+        <th style="width:20%;">예시</th>
+        <th style="width:26%;">타이타닉 예시</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>명목척도</strong><br><span class="small">(Nominal)</span></td>
+        <td>
+          <ul>
+            <li>“라벨 붙이기” 수준의 <strong>분류</strong>만 가능</li>
+            <li>서열(순서) 없음</li>
+            <li>숫자로 바꿔도(예: 남=0, 여=1) <strong>크기 의미가 생기는 건 아님</strong></li>
+          </ul>
+        </td>
+        <td>성별, 지역, 혈액형, 선호 브랜드</td>
+        <td>성별(male/female), 승선항구(C/Q/S)</td>
+      </tr>
+      <tr>
+        <td><strong>순서척도</strong><br><span class="small">(Ordinal)</span></td>
+        <td>
+          <ul>
+            <li>분류 + <strong>서열(순서)</strong> 존재</li>
+            <li>하지만 “1등과 2등의 차이”가 “2등과 3등의 차이”와 같다고 말할 수 없음</li>
+            <li>그래서 덧셈/뺄셈 같은 연산은 조심</li>
+          </ul>
+        </td>
+        <td>만족도(1~5), 등급(A/B/C), 학년</td>
+        <td>선실등급(Pclass: 1,2,3)</td>
+      </tr>
+      <tr>
+        <td><strong>구간척도</strong><br><span class="small">(Interval)</span></td>
+        <td>
+          <ul>
+            <li>서열 + <strong>간격(차이)</strong> 의미 있음</li>
+            <li>하지만 <strong>절대 0이 없음</strong> (0이 “없음”을 뜻하지 않음)</li>
+            <li>그래서 “두 배” 같은 비율 비교는 불가</li>
+          </ul>
+        </td>
+        <td>섭씨온도, IQ</td>
+        <td>타이타닉엔 대표 예시가 적음(가상의 점수 등으로 예시 가능)</td>
+      </tr>
+      <tr>
+        <td><strong>비율척도</strong><br><span class="small">(Ratio)</span></td>
+        <td>
+          <ul>
+            <li>서열 + 간격 + <strong>절대 0 존재</strong></li>
+            <li>사칙연산 가능(평균/비율/두 배 비교 가능)</li>
+          </ul>
+        </td>
+        <td>키, 몸무게, 나이, 소득, 수량, 시간</td>
+        <td>Age, Fare, SibSp, Parch</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <strong>왜 이 구분이 결측/이상값 처리와 연결될까?</strong>
+    <ul>
+      <li><strong>명목/순서(범주형)</strong>은 “평균”이 의미 없어서, 결측값을 평균으로 채우면 안 됩니다 → 보통 <code>최빈값(mode)</code>이나 <code>Unknown</code> 같은 “범주”로 처리합니다.</li>
+      <li><strong>비율/구간(수치형)</strong>은 평균/중앙값이 의미가 있으므로, 결측값을 <code>mean</code> / <code>median</code>으로 대체할 수 있습니다(단, 이상값이 있으면 평균은 위험).</li>
+      <li>이상값 탐지도 수치형에서 주로 하며, 범주형은 “이상범주(희귀범주)” 처리 관점으로 접근합니다.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="card anchor" id="missing">
+  <span class="kicker">1. 결측값</span>
+  <h2>결측값 처리 (Missing Values)</h2>
+
+  <div class="grid">
+    <div class="callout">
+      <strong>결측값이 문제인 이유</strong>
+      <ul>
+        <li>모델/통계 함수가 결측값 때문에 <strong>계산을 못 하거나</strong>, 자동으로 결측이 있는 행을 빼버려서 <strong>표본이 줄어듭니다</strong>.</li>
+        <li>특히 결측이 “특정 그룹에 몰려” 있으면(예: 고령층만 소득 미기재) <strong>편향(Bias)</strong>이 생깁니다.</li>
+      </ul>
+    </div>
+    <div class="callout">
+      <strong>결측값을 먼저 ‘진단’하는 함수들</strong>
+      <ul>
+        <li><code>df.info()</code>: 컬럼별 결측/데이터타입 빠르게 파악</li>
+        <li><code>df.isna()</code> / <code>df.isnull()</code>: 결측 여부(True/False)</li>
+        <li><code>df.isna().sum()</code>: 컬럼별 결측 개수</li>
+        <li><code>df.isna().sum() / len(df) * 100</code>: 결측 비율(%)</li>
+      </ul>
+      <p class="small">※ 원본 노트에서 강조된 흐름(정보 확인 → 결측 찾기 → 비율 보고 → 삭제/대치)과 동일하게 구성했습니다.</p>
+    </div>
+  </div>
+
+  <h3>결측 데이터의 종류(MCAR/MAR/NMAR) — “왜 중요한가?”</h3>
+  <p>결측이 생기는 방식에 따라, 단순히 평균으로 채우는 것이 <strong>위험할 수도</strong> 있습니다.</p>
+  <ul>
+    <li><strong>MCAR</strong> (완전 무작위 결측): 다른 변수와도 관련이 거의 없는 “우연한 누락”. 이때는 삭제/단순대치가 비교적 안전한 편입니다.</li>
+    <li><strong>MAR</strong> (무작위 결측): 결측이 “다른 변수”와 연관. 예: 나이가 많을수록 소득 미기재. 이 경우 단순 평균 대치는 편향을 만들 수 있어, 그룹별 대치나 모델 기반 대치가 더 적절할 수 있습니다.</li>
+    <li><strong>NMAR</strong> (비무작위 결측): 결측이 “자기 자신”과 직접 연관. 예: 소득이 낮을수록 소득을 숨김. 평균으로 채우면 현실을 왜곡할 위험이 큽니다(결측 자체가 의미 있는 신호).</li>
+  </ul>
+
+  <h3>왜 결측 비율에 따라 처리 방법이 달라질까?</h3>
+  <div class="callout">
+    <ul>
+      <li><strong>결측이 적을 때(예: 5% 미만)</strong>: 삭제해도 정보 손실이 작고, 모델이 배울 데이터가 충분히 남습니다. 또한 단순 대치로 인한 “가짜 패턴”을 만들 필요가 없습니다.</li>
+      <li><strong>중간 수준(예: 5~30%)</strong>: 삭제하면 표본이 꽤 줄어 성능/대표성이 나빠질 수 있습니다. 그래서 <strong>대치(Imputation)</strong>가 일반적입니다.</li>
+      <li><strong>많은 수준(예: 30~50%)</strong>: 단순대치(평균/중앙값)만 쓰면, “원래 다양한 값”이 “비슷한 값으로 몰리는” 현상이 생겨 분산이 줄고(데이터가 단조로워짐), 모델이 잘못 학습할 수 있습니다. 이때 <strong>KNN/회귀</strong> 같은 “다른 변수 정보를 활용한 대치”를 고려합니다.</li>
+      <li><strong>너무 많은 수준(예: 50% 이상)</strong>: 해당 컬럼이 “거의 비어있다”는 뜻이라, 대치로 채워도 대부분이 추정값이 됩니다. 즉, 정보보다 노이즈가 커질 수 있어 <strong>삭제</strong>가 합리적일 수 있습니다(단, 업무적으로 중요한 컬럼이면 예외).</li>
+    </ul>
+  </div>
+
+  <h3>결측값 처리 방법(실습 코드는 제외, “어떤 함수/도구를 쓰는지” 중심)</h3>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:18%;">방법</th>
+        <th>언제 쓰나</th>
+        <th style="width:32%;">대표 함수/도구(개념용)</th>
+        <th>주의점</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>행/열 삭제</strong></td>
+        <td>결측 비율이 낮고(예: &lt;5%), 삭제해도 데이터가 충분할 때</td>
+        <td><code>dropna()</code> (행 기준/열 기준 옵션)</td>
+        <td>특정 그룹만 삭제되면 편향이 생김(결측 패턴 확인 필요)</td>
+      </tr>
+      <tr>
+        <td><strong>단순 대치</strong></td>
+        <td>결측 비율이 중간이고, 빠르게 기준선을 만들 때</td>
+        <td>
+          수치형: <code>fillna(mean/median)</code><br>
+          범주형: <code>fillna(mode)</code>, <code>mode()</code>
+        </td>
+        <td>평균 대치는 이상값에 취약(왜곡 가능) → 중앙값 고려</td>
+      </tr>
+      <tr>
+        <td><strong>scikit-learn 대치기</strong></td>
+        <td>파이프라인(모델 학습/예측)에서 일관되게 결측 처리할 때</td>
+        <td><code>sklearn.impute.SimpleImputer</code></td>
+        <td>학습/검증/테스트에 동일 규칙 적용(데이터 누수 방지)</td>
+      </tr>
+      <tr>
+        <td><strong>KNN 대치</strong></td>
+        <td>다른 변수들과 유사한 패턴이 있을 때(30~50% 구간에서 자주 언급)</td>
+        <td><code>sklearn.impute.KNNImputer</code></td>
+        <td>스케일/거리 개념 영향을 받음(스케일링 고려)</td>
+      </tr>
+      <tr>
+        <td><strong>회귀/모델 기반 대치</strong></td>
+        <td>결측이 중요한 수치형 변수이고, 다른 변수로 충분히 예측 가능할 때</td>
+        <td>회귀모델, 트리모델 등(개념)</td>
+        <td>복잡도 증가, 검증 필수(과적합/누수 주의)</td>
+      </tr>
+      <tr>
+        <td><strong>결측 자체를 피처로</strong></td>
+        <td>NMAR처럼 “결측이 의미”일 수 있을 때</td>
+        <td><code>isna()</code>로 결측 여부 플래그 생성(개념)</td>
+        <td>업무적 해석과 함께 사용(왜 결측인지 설명 가능해야 함)</td>
+      </tr>
+    </tbody>
+  
+</table>
+
+
+  <div class="callout">
+    <strong>노트북에서 실제로 등장하는(혹은 연계되는) 핵심 함수/도구 키워드</strong>
+
+    <p class="small">실습 코드는 제외하되, “무슨 도구를 쓰는지”는 강의에 포함해야 한다는 요청을 반영했습니다.</p>
+    <p>
+      결측 진단/비율: <code>info()</code>, <code>isna()</code>, <code>isnull()</code>, <code>notna()</code><br>
+      단순 대치/요약통계: <code>mean()</code>, <code>median()</code>, <code>mode()</code>, <code>fillna()</code>, <code>dropna()</code><br>
+      파이프라인 대치: <code>sklearn.impute.SimpleImputer</code>, <code>sklearn.impute.KNNImputer</code>
+    </p>
+  </div>
+
+
+</section>
+
+<section class="card anchor" id="outliers">
+  <span class="kicker">2. 이상값</span>
+  <h2>이상값 탐지 및 처리 (Outliers)</h2>
+
+  <div class="grid">
+    <div class="callout">
+      <strong>이상값이 문제인 이유</strong>
+      <ul>
+        <li>평균/표준편차를 크게 바꿔서 <strong>전체 통계가 왜곡</strong>됩니다.</li>
+        <li>회귀 같은 모델은 이상값 하나에 끌려가 <strong>예측선이 휘어질</strong> 수 있습니다.</li>
+        <li>하지만 이상값이 “오류”가 아니라 “중요한 사건(부정거래/고액결제)”일 수도 있어, 무조건 제거는 위험합니다.</li>
+      </ul>
+    </div>
+    <div class="callout">
+      <strong>먼저 해야 할 것: 시각화/분포 확인</strong>
+      <ul>
+        <li><code>describe()</code>로 최소/최대/사분위수 확인</li>
+        <li><code>boxplot()</code>으로 수염 밖 점(후보) 확인</li>
+        <li>분포가 오른쪽으로 긴지(왜도), 꼬리가 두꺼운지(극단값 많음) 확인</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>이상값 탐지 방법 3가지 (노트북 구조 유지 + 이해 설명 보강)</h3>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:22%;">방법</th>
+        <th>핵심 아이디어</th>
+        <th style="width:32%;">언제 유리한가</th>
+        <th>주의점</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Z-score</strong><br><span class="small">(표준화 점수)</span></td>
+        <td>평균에서 표준편차 기준으로 얼마나 떨어졌는지: <code>(x-평균)/표준편차</code></td>
+        <td>정규분포에 가깝고 “극단값”을 빠르게 찾을 때</td>
+        <td>표준편차 자체가 이상값의 영향을 받으면 탐지가 약해질 수 있음</td>
+      </tr>
+      <tr>
+        <td><strong>평균 ± 3σ</strong><br><span class="small">(ESD 계열)</span></td>
+        <td>평균을 기준으로 <code>±(3*표준편차)</code> 밖이면 후보</td>
+        <td>설명하기 쉽고, 초보자에게 직관적</td>
+        <td>분포가 비정규/왜도가 크면 과탐/미탐 가능</td>
+      </tr>
+      <tr>
+        <td><strong>IQR</strong><br><span class="small">(사분위수 범위)</span></td>
+        <td>중앙 50% 구간(IQR)을 기준으로 상/하한을 정함</td>
+        <td>정규/비정규 모두 비교적 강함(노트북에서도 “강함” 강조)</td>
+        <td>데이터 특성에 따라 1.5배 기준 조정이 필요할 수 있음</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>IQR을 비전공자 관점으로 풀어 설명</h3>
+  <div class="callout">
+    <p><strong>상자수염그림(Boxplot)</strong>에서 가운데 상자(박스)가 “중앙 50%”입니다. 이 상자의 길이가 <strong>IQR</strong>이고, 보통 <code>Q1 - 1.5×IQR</code>보다 작거나 <code>Q3 + 1.5×IQR</code>보다 큰 점을 “이상값 후보”로 봅니다.</p>
+    <p class="small">왜 평균/표준편차보다 안전하냐면, 평균은 극단값 하나에 흔들리지만, 사분위수(Q1/Q3)는 “순서 기반”이라 극단값 영향이 상대적으로 작기 때문입니다.</p>
+  </div>
+
+  <h3>왜 ‘이상값 처리’도 상황에 따라 방법이 달라질까?</h3>
+  <div class="callout">
+    <ul>
+      <li><strong>오류(out-of-range, 입력 실수)</strong>면 수정/삭제가 맞습니다. 예: 나이 999.</li>
+      <li><strong>희귀하지만 가능한 값</strong>이면, 삭제하면 “현실의 극단”을 못 배우게 됩니다. 예: 매우 높은 운임(Fare)도 실제 VIP가 있을 수 있음.</li>
+      <li><strong>목표가 무엇인지</strong>에 따라 다릅니다. 예: “일반 사용자 평균 행동”을 모델링하면 극단값을 줄이는 게 유리할 수 있고, “부정거래 탐지”면 극단값이 핵심 신호입니다.</li>
+    </ul>
+  </div>
+
+  <h3>이상치 처리 방법 6가지 (노트북 표 유지 + 도구/함수 힌트 추가)</h3>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:18%;">방법</th>
+        <th>설명</th>
+        <th style="width:30%;">대표 도구/함수(개념용)</th>
+        <th>언제 추천</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>1. 삭제</strong></td>
+        <td>이상치로 판단되는 행(row)을 제거</td>
+        <td><code>drop()</code>, 조건 필터링(개념)</td>
+        <td>데이터가 충분히 많고, 이상치가 “오류”로 확실할 때</td>
+      </tr>
+      <tr>
+        <td><strong>2. 대체</strong></td>
+        <td>평균/중앙값 등으로 값을 수정</td>
+        <td><code>median()</code>, <code>fillna()</code>, 조건 치환(개념)</td>
+        <td>극단값이 소수이고, 분포를 크게 바꾸고 싶지 않을 때</td>
+      </tr>
+      <tr>
+        <td><strong>3. 변환</strong></td>
+        <td>로그/루트 변환으로 “큰 값의 영향”을 완화</td>
+        <td><code>log</code>, <code>sqrt</code>(개념)</td>
+        <td>오른쪽으로 긴 분포(우측 꼬리)에서 자주 사용</td>
+      </tr>
+      <tr>
+        <td><strong>4. 구간 압축</strong><br><span class="small">(Winsorization)</span></td>
+        <td>상/하위 극단값을 상/하한 값으로 “컷”하여 영향만 줄임</td>
+        <td><code>clip()</code>, <code>scipy.stats.mstats.winsorize()</code></td>
+        <td>삭제는 싫지만, 평균 왜곡은 줄이고 싶을 때</td>
+      </tr>
+      <tr>
+        <td><strong>5. Robust 방법 사용</strong></td>
+        <td>이상치에 덜 민감한 스케일링/모델 사용</td>
+        <td><code>RobustScaler</code>, <code>RANSAC</code>(개념)</td>
+        <td>이상치가 섞여 있어도 모델이 견딜 필요가 있을 때</td>
+      </tr>
+      <tr>
+        <td><strong>6. 별도 분석</strong></td>
+        <td>이상치만 따로 분석해서 인사이트(이벤트/사기/특수고객) 도출</td>
+        <td>세그먼트 분석(개념)</td>
+        <td>이상치가 “중요한 의미”일 수 있는 도메인(금융/보안 등)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <strong>노트북에서 실제로 등장하는(혹은 연계되는) 핵심 함수/도구 키워드</strong>
+    <p>
+      탐지: <code>mean()</code>, <code>std()</code>, <code>quantile()</code>, <code>describe()</code>, <code>boxplot()</code>, <code>scipy.stats.zscore()</code><br>
+      처리: <code>clip()</code>, <code>scipy.stats.mstats.winsorize()</code>, (분포 완화) <code>log</code>/<code>sqrt</code> 변환
+    </p>
+  </div>
+
+</section>
+
+<section class="card anchor" id="checklist">
+  <span class="kicker">3. 실무 체크리스트</span>
+  <h2>결측값/이상값 처리 체크리스트</h2>
+  <ol>
+    <li><strong>척도 확인</strong>: 범주형인지 수치형인지부터 분리(명목/순서/구간/비율).</li>
+    <li><strong>결측 패턴 확인</strong>: “어느 컬럼/어느 그룹에” 결측이 몰렸는지.</li>
+    <li><strong>결측 비율 기준 적용</strong>: &lt;5%는 삭제 가능, 5~30%는 단순대치, 30~50%는 KNN/모델대치 고려, ≥50%는 컬럼 중요도 평가 후 삭제/대치 결정.</li>
+    <li><strong>이상치 후보 탐지</strong>: Z-score/3σ/IQR 중 데이터 분포에 맞는 기준 선택.</li>
+    <li><strong>이상치의 의미 판단</strong>: 오류인지(삭제/수정), 희귀한 정상인지(변환/윈저라이즈/Robust), 의미 있는 이벤트인지(별도 분석).</li>
+    <li><strong>설명 가능성</strong>: “왜 삭제/대치/압축했는지”를 문장으로 설명할 수 있어야 함(특히 금융/공공).</li>
+  </ol>
+  <p class="small">※ 실습 코드는 제외했지만, 강의에서는 위 체크리스트를 “실제 데이터(타이타닉 등)”에 대입해 판단 연습을 시키면 효과가 좋습니다.</p>
+</section>
+
+<div class="footer">© 학습용 요약본 — 제공된 노트북의 구성/핵심 문장을 최대한 반영하되, 비전공자 이해를 위해 “왜/언제/무슨 도구를 쓰는지” 설명을 확장했습니다.</div>
+</main>
+</body>
+</html>

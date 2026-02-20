@@ -8,3 +8,6 @@ build/
 dist/
 *.spec
 *.exe
+models/
+utils/
+*.pkl

@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>유사도와 거리 측도 강의안</title>
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(','\\)'], ['$', '$']], displayMath: [['\\[','\\]']] },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+  <style>
+    :root{
+      --bg:#f4f7fb;
+      --card:#ffffff;
+      --line:#d8e2f0;
+      --text:#1f2937;
+      --muted:#5b6472;
+      --point:#0f6fb2;
+      --point-soft:#eaf4ff;
+      --accent:#0ea5a4;
+      --good:#0b8f62;
+      --warn:#a15a00;
+      --shadow:0 10px 30px rgba(15, 23, 42, 0.08);
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+      color:var(--text);
+      background:linear-gradient(180deg,#eef5ff 0%, #f7fbff 38%, #f4f7fb 100%);
+      line-height:1.75;
+    }
+    .wrap{width:min(1420px,96vw); margin:0 auto; padding:28px 0 56px}
+    .hero{
+      background:linear-gradient(135deg,#0f6fb2 0%, #15aabf 100%);
+      color:#fff; border-radius:30px; padding:42px;
+      box-shadow:var(--shadow); margin-bottom:22px;
+    }
+    .hero h1{margin:0 0 12px; font-size:2.2rem; line-height:1.25}
+    .hero p{margin:0; font-size:1.03rem; opacity:.97}
+    .toc{
+      background:var(--card); border:1px solid var(--line); border-radius:24px;
+      padding:26px 30px; box-shadow:var(--shadow); margin-bottom:28px;
+    }
+    .toc h2{margin:0 0 14px; font-size:1.35rem; color:var(--point)}
+    .toc-grid{
+      display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:10px 18px;
+    }
+    .toc a{
+      display:block; text-decoration:none; color:var(--text);
+      background:#f8fbff; border:1px solid #e4eef8; border-radius:14px;
+      padding:11px 14px; font-weight:700;
+    }
+    .toc a:hover{background:#eef7ff}
+    .slide{
+      background:var(--card); border:1px solid var(--line); border-radius:28px;
+      padding:34px 36px; box-shadow:var(--shadow); margin:0 0 24px;
+      min-height:78vh; scroll-margin-top:18px; display:flex; flex-direction:column;
+    }
+    .slide h2{margin:0 0 10px; font-size:1.8rem; color:var(--point); line-height:1.3}
+    .slide h3{margin:24px 0 10px; font-size:1.18rem; color:#0b4f7c}
+    .lead{font-size:1.04rem; color:var(--muted); margin:0 0 18px}
+    .badge{
+      display:inline-block; background:var(--point-soft); color:var(--point);
+      border:1px solid #cfe3fa; padding:6px 12px; border-radius:999px;
+      font-size:.92rem; font-weight:800; margin-bottom:14px;
+    }
+    .grid-2,.grid-3,.grid-4{display:grid; gap:18px}
+    .grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .grid-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+    .card{
+      background:#fbfdff; border:1px solid #e7eef7; border-radius:18px; padding:18px 20px;
+    }
+    .card h4{margin:0 0 8px; font-size:1.02rem; color:#124b72}
+    ul{margin:8px 0 0 1.15rem}
+    li{margin:6px 0}
+    .formula{
+      background:#f8fbff; border:1px solid #dbe8f7; border-radius:18px;
+      padding:16px 18px; margin:14px 0; overflow:auto;
+    }
+    .tip,.warn,.good{
+      border-radius:18px; padding:14px 16px; margin-top:12px;
+    }
+    .tip{background:#f2fffd; border:1px solid #ccf3ea; color:#0b5e58}
+    .warn{background:#fff8ef; border:1px solid #f6dfba; color:#8a5a11}
+    .good{background:#f2fbf7; border:1px solid #caeadc; color:#116445}
+    .emph{
+      background:#0f6fb2; color:#fff; border-radius:20px; padding:18px 20px;
+      font-weight:800; font-size:1.08rem; margin-top:14px;
+    }
+    .small{font-size:.95rem; color:var(--muted)}
+    table{
+      width:100%; border-collapse:collapse; margin:12px 0 6px; font-size:.98rem;
+      overflow:hidden; border-radius:16px;
+    }
+    th,td{
+      border:1px solid #dbe5f0; padding:10px 12px; text-align:center; vertical-align:middle;
+    }
+    th{background:#eef6ff; color:#124b72}
+    .steps{counter-reset:step; margin:14px 0 0; padding:0}
+    .steps li{list-style:none; position:relative; padding-left:44px; margin:12px 0}
+    .steps li::before{
+      counter-increment:step; content:counter(step);
+      position:absolute; left:0; top:1px; width:28px; height:28px; border-radius:50%;
+      background:var(--point); color:#fff; font-weight:800; display:flex; align-items:center; justify-content:center;
+      font-size:.9rem;
+    }
+    .footer-note{margin-top:auto; padding-top:18px; color:var(--muted); font-size:.95rem}
+    @media (max-width: 980px){
+      .grid-2,.grid-3,.grid-4{grid-template-columns:1fr}
+      .slide{min-height:auto; padding:26px 22px}
+      .hero{padding:30px 24px}
+      .hero h1{font-size:1.7rem}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <h1>연속형 변수와 범주형 변수의 유사도·거리 측도 강의안</h1>
+      <p>학생들이 가장 많이 헷갈리는 <strong>지수(유사도)</strong>와 <strong>거리(distance)</strong>를 먼저 명확히 구분한 뒤, 연속형 변수와 범주형 변수의 계산법을 이해하기 쉽게 정리한 슬라이드형 HTML 강의안입니다.</p>
+    </section>
+
+    <nav class="toc">
+      <h2>목차</h2>
+      <div class="toc-grid">
+        <a href="#s1">1. 유사도와 거리의 차이</a>
+        <a href="#s2">2. 왜 학생들이 헷갈릴까?</a>
+        <a href="#s3">3. 연속형 변수 거리 측도 개요</a>
+        <a href="#s4">4. 유클리디안 거리</a>
+        <a href="#s5">5. 맨해튼 거리</a>
+        <a href="#s6">6. 체비셰프 거리</a>
+        <a href="#s7">7. 표준화 거리</a>
+        <a href="#s8">8. 마할라노비스 거리</a>
+        <a href="#s9">9. 민코프스키 거리</a>
+        <a href="#s10">10. 연속형 변수 예제 계산</a>
+        <a href="#s11">11. 표준화와 정규화</a>
+        <a href="#s12">12. 범주형 변수의 유사도 지수</a>
+        <a href="#s13">13. SMC 지수와 거리</a>
+        <a href="#s14">14. 자카드 지수와 자카드 거리</a>
+        <a href="#s15">15. 코사인 유사도와 코사인 거리</a>
+        <a href="#s16">16. 전체 비교 표</a>
+        <a href="#s17">17. 어떤 측도를 써야 하나?</a>
+      </div>
+    </nav>
+
+    <section class="slide" id="s1">
+      <div class="badge">1. 가장 먼저 구분할 개념</div>
+      <h2>유사도와 거리는 서로 반대 방향의 개념입니다</h2>
+      <p class="lead">강의에서 가장 먼저 분리해서 설명해야 하는 것은 <strong>지수(유사도)</strong>와 <strong>거리(distance)</strong>입니다. 이 둘을 섞어서 설명하면 학생들이 자카드와 코사인에서 거의 반드시 헷갈립니다.</p>
+
+      <div class="grid-2">
+        <div class="card">
+          <h4>유사도 (Similarity, 지수)</h4>
+          <ul>
+            <li>얼마나 비슷한가를 나타냄</li>
+            <li>값이 클수록 더 비슷함</li>
+            <li>보통 0~1 범위를 많이 사용</li>
+            <li><strong>1이면 완전히 같음</strong></li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>거리 (Distance)</h4>
+          <ul>
+            <li>얼마나 다른가를 나타냄</li>
+            <li>값이 클수록 더 다름</li>
+            <li>0~1일 수도 있고 그보다 클 수도 있음</li>
+            <li><strong>0이면 완전히 같음</strong></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="emph">유사도는 1이 같음 / 거리는 0이 같음</div>
+
+      <table>
+        <tr><th>구분</th><th>작을수록</th><th>클수록</th><th>같을 때 값</th></tr>
+        <tr><th>유사도</th><td>덜 비슷함</td><td>더 비슷함</td><td><strong>1</strong></td></tr>
+        <tr><th>거리</th><td>더 가까움</td><td>더 다름</td><td><strong>0</strong></td></tr>
+      </table>
+    </section>
+
+    <section class="slide" id="s2">
+      <div class="badge">2. 헷갈리는 이유</div>
+      <h2>왜 지수와 거리를 자주 혼동할까?</h2>
+      <p class="lead">이름이 비슷하고 같은 예제에서 함께 다루기 때문입니다. 하지만 해석은 완전히 다릅니다.</p>
+
+      <div class="grid-3">
+        <div class="card">
+          <h4>자카드</h4>
+          <p><strong>자카드 지수</strong>는 유사도이고, <strong>자카드 거리</strong>는 차이입니다.</p>
+        </div>
+        <div class="card">
+          <h4>코사인</h4>
+          <p><strong>코사인 유사도</strong>는 방향이 얼마나 비슷한지, <strong>코사인 거리</strong>는 그 차이를 거리처럼 바꾼 값입니다.</p>
+        </div>
+        <div class="card">
+          <h4>시험 포인트</h4>
+          <p>이름이 비슷해도 <strong>Similarity</strong>인지 <strong>Distance</strong>인지 먼저 확인해야 합니다.</p>
+        </div>
+      </div>
+
+      <div class="formula">\[
+      \text{Distance} = 1 - \text{Similarity}
+      \]</div>
+
+      <div class="good">즉, 어떤 유사도 지수를 거리로 바꾸고 싶으면 보통 <strong>1 - 유사도</strong>를 사용합니다.</div>
+    </section>
+
+    <section class="slide" id="s3">
+      <div class="badge">3. 연속형 변수</div>
+      <h2>연속형 변수에서는 보통 거리(distance)를 계산합니다</h2>
+      <p class="lead">키, 몸무게, 나이, 소득처럼 숫자 크기 차이가 중요한 변수에서는 보통 유사도 지수보다 거리 측도를 먼저 배웁니다.</p>
+
+      <div class="grid-2">
+        <div class="card">
+          <h4>대표 거리</h4>
+          <ul>
+            <li>유클리디안 거리</li>
+            <li>맨해튼 거리</li>
+            <li>체비셰프 거리</li>
+            <li>표준화 거리</li>
+            <li>마할라노비스 거리</li>
+            <li>민코프스키 거리</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>핵심 기준</h4>
+          <ul>
+            <li>값의 차이를 직접 계산</li>
+            <li>단위 차이에 영향을 받음</li>
+            <li>거리값은 꼭 0~1일 필요가 없음</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="warn">연속형 변수의 거리는 대부분 <strong>0이면 같음</strong>만 기억하면 됩니다. 1이 최대라는 뜻은 아닙니다.</div>
+    </section>
+
+    <section class="slide" id="s4">
+      <div class="badge">4. Euclidean Distance</div>
+      <h2>유클리디안 거리</h2>
+      <p class="lead">두 점 사이의 직선거리입니다. 연속형 변수 거리의 가장 기본이 되는 개념입니다.</p>
+      <div class="formula">\[
+      d(x,y)=\sqrt{\sum_{i=1}^{n}(x_i-y_i)^2}
+      \]</div>
+      <div class="grid-2">
+        <div class="card">
+          <h4>계산 방식</h4>
+          <ul>
+            <li>차이를 구함</li>
+            <li>제곱함</li>
+            <li>합함</li>
+            <li>제곱근을 취함</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>해석</h4>
+          <ul>
+            <li>0이면 완전히 같음</li>
+            <li>값이 커질수록 더 멂</li>
+            <li>최댓값이 1로 제한되지 않음</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" id="s5">
+      <div class="badge">5. Manhattan Distance</div>
+      <h2>맨해튼 거리</h2>
+      <p class="lead">직선이 아니라 격자형 길을 따라 이동한 거리처럼 생각하면 됩니다.</p>
+      <div class="formula">\[
+      d(x,y)=\sum_{i=1}^{n}|x_i-y_i|
+      \]</div>
+      <div class="tip">유클리디안은 직선거리, 맨해튼은 절댓값 차이의 합입니다.</div>
+    </section>
+
+    <section class="slide" id="s6">
+      <div class="badge">6. Chebyshev Distance</div>
+      <h2>체비셰프 거리</h2>
+      <p class="lead">여러 변수 차이 중에서 가장 큰 차이 하나만 거리로 사용합니다.</p>
+      <div class="formula">\[
+      d(x,y)=\max |x_i-y_i|
+      \]</div>
+      <div class="tip">한 항목이라도 크게 다르면 멀다고 봐야 할 때 적합합니다.</div>
+    </section>
+
+    <section class="slide" id="s7">
+      <div class="badge">7. Standardized Distance</div>
+      <h2>표준화 거리</h2>
+      <p class="lead">변수 단위 차이를 보정한 거리입니다. 값의 크기가 큰 변수 하나가 거리 계산을 지배하지 않도록 조정합니다.</p>
+      <div class="formula">\[
+      d(x,y)=\left[\sum_{i=1}^{n}\frac{(x_i-y_i)^2}{S_{ii}}\right]^{1/2}
+      \]</div>
+      <p class="small">\(S_{ii}\)는 각 변수의 분산입니다.</p>
+    </section>
+
+    <section class="slide" id="s8">
+      <div class="badge">8. Mahalanobis Distance</div>
+      <h2>마할라노비스 거리</h2>
+      <p class="lead">변수 간 상관관계까지 반영하는 거리입니다.</p>
+      <div class="formula">\[
+      d(x,y)=\left[(X-Y)^T S^{-1}(X-Y)\right]^{1/2}
+      \]</div>
+      <div class="tip">서로 관련 있는 변수들이 있을 때 단순 유클리디안 거리보다 더 현실적인 거리 해석이 가능합니다.</div>
+    </section>
+
+    <section class="slide" id="s9">
+      <div class="badge">9. Minkowski Distance</div>
+      <h2>민코프스키 거리</h2>
+      <p class="lead">유클리디안 거리와 맨해튼 거리를 하나의 식으로 묶어놓은 일반형 거리입니다.</p>
+      <div class="formula">\[
+      d(x,y)=\left(\sum_{i=1}^{n}|x_i-y_i|^m\right)^{1/m}
+      \]</div>
+      <table>
+        <tr><th>\(m\) 값</th><th>의미</th></tr>
+        <tr><td>1</td><td>맨해튼 거리</td></tr>
+        <tr><td>2</td><td>유클리디안 거리</td></tr>
+      </table>
+    </section>
+
+    <section class="slide" id="s10">
+      <div class="badge">10. 계산 예제</div>
+      <h2>연속형 변수 거리 계산 예제</h2>
+      <p class="lead">두 점 \(A=(3,3,5)\), \(B=(1,7,2)\)라고 하겠습니다.</p>
+
+      <div class="grid-3">
+        <div class="card">
+          <h4>유클리디안 거리</h4>
+          <div class="formula">\[
+          d=\sqrt{(3-1)^2+(3-7)^2+(5-2)^2}
+          =\sqrt{4+16+9}
+          =\sqrt{29}
+          \]</div>
+        </div>
+        <div class="card">
+          <h4>맨해튼 거리</h4>
+          <div class="formula">\[
+          d=|3-1|+|3-7|+|5-2|
+          =2+4+3=9
+          \]</div>
+        </div>
+        <div class="card">
+          <h4>체비셰프 거리</h4>
+          <div class="formula">\[
+          d=\max(2,4,3)=4
+          \]</div>
+        </div>
+      </div>
+
+      <div class="warn">세 값 모두 <strong>거리</strong>이므로 해석 기준은 같습니다. <strong>0이면 같고, 값이 클수록 더 다릅니다.</strong></div>
+    </section>
+
+    <section class="slide" id="s11">
+      <div class="badge">11. 전처리</div>
+      <h2>표준화와 정규화는 거리 계산 전 단계입니다</h2>
+      <p class="lead">표준화와 정규화는 거리 그 자체가 아니라, 거리 계산 전에 데이터를 조정하는 전처리 과정입니다.</p>
+
+      <div class="grid-2">
+        <div class="card">
+          <h4>표준화(Standardization)</h4>
+          <div class="formula">\[
+          x_{new}=\frac{x-\mu}{\sigma}
+          \]</div>
+          <ul>
+            <li>평균 0, 표준편차 1</li>
+            <li>sklearn에서는 <strong>StandardScaler</strong></li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>정규화(Normalization)</h4>
+          <div class="formula">\[
+          x_{new}=\frac{x-x_{min}}{x_{max}-x_{min}}
+          \]</div>
+          <ul>
+            <li>보통 0~1 범위로 변환</li>
+            <li>sklearn에서는 <strong>MinMaxScaler</strong></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="good">정리하면, 표준화와 정규화는 <strong>거리 측도</strong>가 아니라 <strong>거리 계산을 돕는 전처리</strong>입니다.</div>
+    </section>
+
+    <section class="slide" id="s12">
+      <div class="badge">12. 범주형 변수</div>
+      <h2>범주형 변수에서는 유사도 지수와 거리 둘 다 나옵니다</h2>
+      <p class="lead">구매 여부, 클릭 여부, 단어 포함 여부처럼 범주형 데이터에서는 “같은가/다른가”가 핵심이므로, 유사도 지수와 거리로 나누어 설명해야 합니다.</p>
+
+      <div class="grid-2">
+        <div class="card">
+          <h4>대표 유사도 지수</h4>
+          <ul>
+            <li>SMC 지수</li>
+            <li>자카드 지수</li>
+            <li>코사인 유사도</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>대표 거리</h4>
+          <ul>
+            <li>SMC 기반 거리</li>
+            <li>자카드 거리</li>
+            <li>코사인 거리</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="emph">범주형 파트에서는 항상 “지수인지 거리인지”를 이름부터 먼저 확인해야 합니다.</div>
+    </section>
+
+    <section class="slide" id="s13">
+      <div class="badge">13. SMC</div>
+      <h2>단순 일치 계수: SMC 지수와 SMC 거리</h2>
+      <p class="lead">SMC는 1-1 일치뿐 아니라 0-0 일치도 같은 것으로 봅니다.</p>
+
+      <table>
+        <tr><th></th><th>Var1</th><th>Var2</th><th>Var3</th><th>Var4</th><th>Var5</th></tr>
+        <tr><th>A</th><td>1</td><td>1</td><td>1</td><td>0</td><td>0</td></tr>
+        <tr><th>B</th><td>0</td><td>1</td><td>0</td><td>1</td><td>0</td></tr>
+      </table>
+
+      <ol class="steps">
+        <li>일치한 변수는 Var2, Var5 이므로 \(m=2\)</li>
+        <li>전체 변수 수는 \(p=5\)</li>
+      </ol>
+
+      <div class="grid-2">
+        <div class="card">
+          <h4>SMC 지수 (유사도)</h4>
+          <div class="formula">\[
+          SMC=\frac{m}{p}=\frac{2}{5}
+          \]</div>
+          <p><strong>유사도</strong>이므로 값이 클수록 비슷합니다.</p>
+        </div>
+        <div class="card">
+          <h4>SMC 거리</h4>
+          <div class="formula">\[
+          d=\frac{p-m}{p}=1-\frac{m}{p}=1-SMC
+          \]</div>
+          <p><strong>거리</strong>이므로 값이 클수록 다릅니다.</p>
+        </div>
+      </div>
+
+      <div class="good">즉, 같은 예제라도 <strong>SMC 지수</strong>와 <strong>SMC 거리</strong>는 해석 방향이 반대입니다.</div>
+    </section>
+
+    <section class="slide" id="s14">
+      <div class="badge">14. Jaccard</div>
+      <h2>자카드 지수와 자카드 거리</h2>
+      <p class="lead">자카드는 공통된 1의 비율만 중요하게 보고, 0-0 일치는 제외합니다.</p>
+
+      <table>
+        <tr><th></th><th>Var1</th><th>Var2</th><th>Var3</th><th>Var4</th><th>Var5</th></tr>
+        <tr><th>A</th><td>1</td><td>1</td><td>1</td><td>0</td><td>0</td></tr>
+        <tr><th>B</th><td>0</td><td>1</td><td>0</td><td>1</td><td>0</td></tr>
+      </table>
+
+      <div class="grid-2">
+        <div class="card">
+          <h4>자카드 지수 (유사도)</h4>
+          <div class="formula">\[
+          J(X,Y)=\frac{|A\cap B|}{|A\cup B|}
+          =\frac{1}{4}
+          \]</div>
+          <ul>
+            <li>1이면 완전히 같음</li>
+            <li>0이면 공통이 없음</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>자카드 거리</h4>
+          <div class="formula">\[
+          d_{jaccard}=1-J(X,Y)=1-\frac{1}{4}=\frac{3}{4}
+          \]</div>
+          <ul>
+            <li>0이면 완전히 같음</li>
+            <li>1이면 완전히 다름</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="emph">자카드 지수는 1이 같음 / 자카드 거리는 0이 같음</div>
+    </section>
+
+    <section class="slide" id="s15">
+      <div class="badge">15. Cosine</div>
+      <h2>코사인 유사도와 코사인 거리</h2>
+      <p class="lead">코사인은 벡터의 크기보다 방향이 얼마나 비슷한지를 봅니다.</p>
+
+      <table>
+        <tr><th></th><th>apple</th><th>banana</th><th>melon</th></tr>
+        <tr><th>A</th><td>4</td><td>2</td><td>0</td></tr>
+        <tr><th>B</th><td>2</td><td>1</td><td>3</td></tr>
+      </table>
+
+      <div class="grid-2">
+        <div class="card">
+          <h4>코사인 유사도</h4>
+          <div class="formula">\[
+          CosineSimilarity(A,B)=
+          \frac{(4\times2)+(2\times1)+(0\times3)}
+          {\sqrt{4^2+2^2+0^2}\sqrt{2^2+1^2+3^2}}
+          =
+          \frac{10}{\sqrt{20}\sqrt{14}}
+          \approx 0.598
+          \]</div>
+          <p>값이 클수록 방향이 더 비슷합니다.</p>
+        </div>
+        <div class="card">
+          <h4>코사인 거리</h4>
+          <div class="formula">\[
+          d_{cosine}=1-CosineSimilarity
+          \approx 1-0.598=0.402
+          \]</div>
+          <p>값이 작을수록 더 비슷합니다.</p>
+        </div>
+      </div>
+
+      <div class="warn">코사인 유사도는 <strong>1이 비슷함</strong>, 코사인 거리는 <strong>0이 비슷함</strong>으로 해석해야 합니다.</div>
+    </section>
+
+    <section class="slide" id="s16">
+      <div class="badge">16. 전체 비교</div>
+      <h2>지수와 거리 차이를 한 표로 정리</h2>
+
+      <table>
+        <tr>
+          <th>방법</th>
+          <th>유형</th>
+          <th>같을 때 값</th>
+          <th>클수록 의미</th>
+        </tr>
+        <tr>
+          <th>SMC 지수</th>
+          <td>유사도</td>
+          <td>1</td>
+          <td>더 비슷함</td>
+        </tr>
+        <tr>
+          <th>SMC 거리</th>
+          <td>거리</td>
+          <td>0</td>
+          <td>더 다름</td>
+        </tr>
+        <tr>
+          <th>자카드 지수</th>
+          <td>유사도</td>
+          <td>1</td>
+          <td>더 비슷함</td>
+        </tr>
+        <tr>
+          <th>자카드 거리</th>
+          <td>거리</td>
+          <td>0</td>
+          <td>더 다름</td>
+        </tr>
+        <tr>
+          <th>코사인 유사도</th>
+          <td>유사도</td>
+          <td>1</td>
+          <td>더 비슷함</td>
+        </tr>
+        <tr>
+          <th>코사인 거리</th>
+          <td>거리</td>
+          <td>0</td>
+          <td>더 다름</td>
+        </tr>
+        <tr>
+          <th>유클리디안 거리</th>
+          <td>거리</td>
+          <td>0</td>
+          <td>더 다름</td>
+        </tr>
+      </table>
+
+      <div class="good">이 표 한 장만 정확히 이해하면 학생들이 가장 많이 헷갈리는 부분이 거의 정리됩니다.</div>
+    </section>
+
+    <section class="slide" id="s17">
+      <div class="badge">17. 실전 선택</div>
+      <h2>어떤 측도를 써야 하나?</h2>
+
+      <div class="grid-2">
+        <div class="card">
+          <h4>연속형 변수라면</h4>
+          <ul>
+            <li>기본은 유클리디안 거리</li>
+            <li>이상치 영향 줄이고 싶으면 맨해튼</li>
+            <li>최대 차이만 보려면 체비셰프</li>
+            <li>상관관계 반영은 마할라노비스</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>범주형 변수라면</h4>
+          <ul>
+            <li>0-0 일치도 중요하면 SMC</li>
+            <li>1의 일치만 중요하면 자카드</li>
+            <li>문서/단어 빈도 비교면 코사인</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3>마무리 한 줄 정리</h3>
+      <div class="formula">\[
+      \text{유사도는 클수록 비슷하고, 거리는 작을수록 비슷하다.}
+      \]</div>
+
+      <div class="footer-note">수업에서는 반드시 “이 식이 유사도인지 거리인지”를 먼저 말한 뒤 계산에 들어가면 학생들이 훨씬 덜 헷갈립니다.</div>
+    </section>
+  </div>
+</body>
+</html>

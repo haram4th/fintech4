@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>합성곱 신경망(CNN) 강의안</title>
+  <style>
+    :root{
+      --bg:#f6f8fc;
+      --card:#ffffff;
+      --text:#1f2937;
+      --muted:#6b7280;
+      --line:#e5e7eb;
+      --accent:#2563eb;
+      --accent2:#7c3aed;
+      --soft:#eef4ff;
+      --soft2:#f5f3ff;
+      --code:#111827;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      font-family: "Pretendard","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+      background: linear-gradient(180deg, #eef4ff 0%, #f8fafc 25%, #ffffff 100%);
+      color:var(--text);
+      line-height:1.75;
+    }
+    .wrap{
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 24px 20px 80px;
+    }
+    .hero{
+      background: linear-gradient(135deg, rgba(37,99,235,.10), rgba(124,58,237,.10));
+      border:1px solid rgba(37,99,235,.15);
+      border-radius:28px;
+      padding:40px 32px;
+      box-shadow:0 20px 50px rgba(15,23,42,.08);
+      margin-bottom:22px;
+    }
+    .eyebrow{
+      display:inline-block;
+      padding:6px 12px;
+      border-radius:999px;
+      font-size:14px;
+      font-weight:700;
+      color:var(--accent);
+      background:#eaf1ff;
+      margin-bottom:12px;
+    }
+    h1{
+      margin:0 0 12px;
+      font-size: clamp(2rem, 4vw, 3rem);
+      line-height:1.2;
+      letter-spacing:-0.03em;
+    }
+    .subtitle{
+      font-size:1.05rem;
+      color:var(--muted);
+      margin:0;
+    }
+    .toc{
+      position:sticky;
+      top:10px;
+      z-index:10;
+      background:rgba(255,255,255,.88);
+      backdrop-filter: blur(10px);
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:18px 20px;
+      box-shadow:0 10px 30px rgba(15,23,42,.06);
+      margin:18px 0 24px;
+    }
+    .toc h2{
+      font-size:1rem;
+      margin:0 0 12px;
+    }
+    .toc a{
+      display:block;
+      text-decoration:none;
+      color:#1d4ed8;
+      padding:6px 0;
+      font-weight:600;
+    }
+    .toc a:hover{color:#4338ca}
+    .section{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:24px;
+      padding:32px 28px;
+      margin:18px 0;
+      box-shadow:0 12px 36px rgba(15,23,42,.05);
+    }
+    .section h2{
+      margin:0 0 16px;
+      font-size:1.8rem;
+      letter-spacing:-0.02em;
+    }
+    .section h3{
+      margin:28px 0 12px;
+      font-size:1.2rem;
+    }
+    .section h4{
+      margin:22px 0 8px;
+      font-size:1.05rem;
+    }
+    p{margin:10px 0}
+    ul,ol{margin:8px 0 14px 22px}
+    li{margin:6px 0}
+    .card{
+      background:linear-gradient(180deg,#ffffff 0%, #f8fbff 100%);
+      border:1px solid #dbe7ff;
+      border-radius:18px;
+      padding:18px 18px;
+      margin:14px 0;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:14px;
+    }
+    .badge{
+      display:inline-block;
+      font-size:.84rem;
+      font-weight:700;
+      color:#4338ca;
+      background:#ede9fe;
+      padding:4px 10px;
+      border-radius:999px;
+      margin-bottom:8px;
+    }
+    table{
+      width:100%;
+      border-collapse:collapse;
+      margin:14px 0 10px;
+      overflow:hidden;
+      border-radius:14px;
+    }
+    th,td{
+      border:1px solid var(--line);
+      padding:12px 14px;
+      vertical-align:top;
+      text-align:left;
+    }
+    th{
+      background:#f8fafc;
+      font-weight:800;
+    }
+    code{
+      background:#eff6ff;
+      color:#1d4ed8;
+      padding:2px 7px;
+      border-radius:8px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size:.95em;
+    }
+    pre{
+      background:var(--code);
+      color:#f9fafb;
+      padding:18px;
+      border-radius:16px;
+      overflow:auto;
+      border:1px solid #1f2937;
+      font-size:.95rem;
+      line-height:1.6;
+    }
+    .formula{
+      background:#f8fafc;
+      border-left:5px solid var(--accent);
+      padding:14px 16px;
+      border-radius:12px;
+      font-weight:600;
+      margin:12px 0;
+    }
+    .note{
+      background:#fff7ed;
+      border:1px solid #fed7aa;
+      border-radius:16px;
+      padding:16px;
+      margin:14px 0;
+    }
+    .warn{
+      background:#fef2f2;
+      border:1px solid #fecaca;
+      border-radius:16px;
+      padding:16px;
+      margin:14px 0;
+    }
+    .footer{
+      color:var(--muted);
+      text-align:center;
+      padding:30px 10px 10px;
+      font-size:.95rem;
+    }
+    .divider{
+      height:1px;background:linear-gradient(90deg, transparent, #dbeafe, transparent);
+      margin:22px 0;
+    }
+    .mini{
+      color:var(--muted);
+      font-size:.96rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <div class="eyebrow">Deep Learning Lecture</div>
+      <h1>합성곱 신경망(CNN)<br>한 번에 이해하는 강의안</h1>
+      <p class="subtitle">
+        합성곱 연산을 왜 하는지, pooling의 종류와 이유, CNN의 전체 구조, 분류까지 이어지는 흐름을
+        비전공자도 이해할 수 있도록 1열 구조로 정리한 HTML 강의안입니다.
+      </p>
+    </section>
+
+    
+<nav class="toc" style="padding:10px 16px;">
+  <div style="display:flex;flex-wrap:wrap;gap:10px;font-size:13px;">
+    <a href="#s1">CNN</a>
+    <a href="#s2">문제</a>
+    <a href="#s3">합성곱</a>
+    <a href="#s4">이유</a>
+    <a href="#s5">필터</a>
+    <a href="#s6">Stride/Padding</a>
+    <a href="#s7">Activation</a>
+    <a href="#s8">Pooling 종류</a>
+    <a href="#s9">Pooling 이유</a>
+    <a href="#s10">흐름</a>
+    <a href="#s11">코드</a>
+    <a href="#s12">Q&A</a>
+    <a href="#s13">요약</a>
+  </div>
+</nav>
+
+
+    <section class="section" id="s1">
+      <h2>1. CNN이란 무엇인가</h2>
+      <p>
+        CNN은 <strong>Convolutional Neural Network</strong>, 즉 <strong>합성곱 신경망</strong>입니다.
+        주로 이미지, 영상, 패턴 데이터처럼 <strong>공간적인 구조</strong>를 가진 데이터를 다룰 때 강력합니다.
+      </p>
+      <div class="card">
+        <span class="badge">핵심 개념</span>
+        <p>
+          이미지는 단순한 숫자 목록이 아니라, <strong>가까운 픽셀끼리 의미 있는 관계</strong>를 가집니다.
+          CNN은 이 점을 활용해서 <strong>모서리, 선, 질감, 부분 형태, 전체 형태</strong>를 단계적으로 학습합니다.
+        </p>
+      </div>
+      <p>
+        예를 들어 고양이 사진을 분류할 때 CNN은 처음부터 “고양이”를 바로 이해하는 것이 아니라,
+      </p>
+      <ol>
+        <li>초기 층에서 선, 경계, 방향 같은 단순 특징을 찾고</li>
+        <li>중간 층에서 눈, 귀, 털결 같은 부분 특징을 조합하고</li>
+        <li>깊은 층에서 전체적인 고양이 형태를 인식합니다.</li>
+      </ol>
+    </section>
+
+    <section class="section" id="s2">
+      <h2>2. 왜 완전연결층만으로는 이미지 처리가 어려운가</h2>
+      <p>
+        일반적인 완전연결층(Dense layer)은 입력의 모든 값이 다음 층의 모든 뉴런과 연결됩니다.
+        이미지에 이 방식을 그대로 적용하면 문제가 생깁니다.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>문제</th>
+            <th>설명</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>파라미터 수 폭증</td>
+            <td>예를 들어 224×224×3 이미지를 그대로 펼치면 입력 차원이 매우 커져 가중치 수가 급격히 증가합니다.</td>
+          </tr>
+          <tr>
+            <td>공간 정보 손실</td>
+            <td>이미지를 1차원으로 펼치면 원래 가까이 있던 픽셀의 위치 관계가 약해집니다.</td>
+          </tr>
+          <tr>
+            <td>비효율적인 학습</td>
+            <td>같은 형태가 이미지의 다른 위치에 있어도 별개로 학습해야 할 수 있습니다.</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="note">
+        이미지는 “어떤 값이 있느냐”도 중요하지만,
+        <strong>그 값이 어디에 있느냐</strong>도 중요합니다.
+        CNN은 이 공간 정보를 더 잘 보존합니다.
+      </div>
+    </section>
+
+    <section class="section" id="s3">
+      <h2>3. 합성곱 연산이란 무엇인가</h2>
+      <p>
+        합성곱 연산은 작은 필터(커널)를 입력 데이터 위에서 한 칸씩 이동시키며,
+        <strong>각 위치의 국소 영역(local region)</strong>과 계산하는 방식입니다.
+      </p>
+      <div class="formula">
+        출력값 = 입력의 일부 영역 × 필터 가중치 를 원소별로 곱한 뒤 모두 더한 값
+      </div>
+      <p>
+        즉, 필터는 이미지 전체를 한 번에 보는 것이 아니라 <strong>작은 창(window)</strong>처럼 움직이며
+        특정 패턴이 있는지를 검사합니다.
+      </p>
+      <pre>
+예시: 3×3 필터가 5×5 이미지 위를 이동
+
+[입력 일부 영역]   ×   [필터]
+값을 곱해서 더함  →   하나의 출력값 생성
+
+이 과정을 여러 위치에서 반복하면
+하나의 특성맵(feature map)이 만들어짐
+      </pre>
+      <p>
+        필터가 “세로선”을 잘 찾아내도록 학습되면, 세로선이 있는 위치에서 출력값이 크게 나타날 수 있습니다.
+      </p>
+    </section>
+
+    <section class="section" id="s4">
+      <h2>4. 합성곱 연산을 하는 이유</h2>
+      <h3>4-1. 지역적 특징을 잡기 위해</h3>
+      <p>
+        이미지에서는 전체보다도 먼저 <strong>작은 부분의 패턴</strong>이 중요합니다.
+        예를 들어 모서리, 밝기 변화, 질감 같은 정보는 국소 영역에서 잘 드러납니다.
+      </p>
+
+      <h3>4-2. 파라미터 수를 줄이기 위해</h3>
+      <p>
+        완전연결층은 모든 입력과 모든 뉴런을 연결하지만,
+        합성곱은 작은 필터를 공유해서 사용합니다.
+        그래서 필요한 가중치 수가 크게 줄어듭니다.
+      </p>
+
+      <h3>4-3. 같은 패턴을 위치와 상관없이 찾기 위해</h3>
+      <p>
+        고양이의 눈이 이미지 왼쪽 위에 있든 오른쪽 아래에 있든,
+        눈이라는 패턴 자체는 같습니다.
+        CNN은 동일한 필터를 전체 영역에 적용하므로 <strong>패턴 탐지의 재사용</strong>이 가능합니다.
+      </p>
+
+      <h3>4-4. 계층적으로 특징을 학습하기 위해</h3>
+      <p>
+        CNN은 낮은 수준의 특징에서 높은 수준의 특징으로 점점 추상화합니다.
+      </p>
+      <div class="card">
+        <strong>학습의 계층 구조</strong>
+        <ul>
+          <li>초기층: 선, 경계, 방향</li>
+          <li>중간층: 질감, 모양 조각, 부분 구조</li>
+          <li>깊은층: 얼굴, 바퀴, 동물의 귀 같은 복합 패턴</li>
+        </ul>
+      </div>
+
+      <h3>4-5. 계산 효율을 높이기 위해</h3>
+      <p>
+        입력 전체를 한 번에 처리하지 않고 작은 필터를 반복 적용하므로,
+        이미지와 같은 대규모 입력에서도 실용적으로 학습할 수 있습니다.
+      </p>
+    </section>
+
+    <section class="section" id="s5">
+      <h2>5. 필터·커널·특성맵 이해하기</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>용어</th>
+            <th>의미</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>필터(Filter) / 커널(Kernel)</td>
+            <td>입력 위를 이동하면서 특정 패턴을 찾는 작은 가중치 행렬</td>
+          </tr>
+          <tr>
+            <td>특성맵(Feature Map)</td>
+            <td>필터를 적용한 결과로 만들어지는 출력 맵</td>
+          </tr>
+          <tr>
+            <td>채널(Channel)</td>
+            <td>RGB 이미지라면 보통 3개 채널(R, G, B)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>
+        필터가 여러 개 있으면 여러 종류의 특징을 동시에 추출할 수 있습니다.
+        예를 들어 어떤 필터는 가로선을, 다른 필터는 세로선을, 또 다른 필터는 곡선을 잘 찾게 학습될 수 있습니다.
+      </p>
+
+      <div class="note">
+        <strong>중요:</strong> 필터 값은 사람이 직접 정하는 경우도 있지만,
+        딥러닝에서는 대부분 <strong>학습을 통해 자동으로 최적화</strong>됩니다.
+      </div>
+    </section>
+
+    <section class="section" id="s6">
+      <h2>6. 스트라이드와 패딩</h2>
+
+      <h3>6-1. 스트라이드(Stride)</h3>
+      <p>
+        필터가 입력 위를 이동할 때 <strong>몇 칸씩 이동할지</strong>를 의미합니다.
+      </p>
+      <ul>
+        <li><code>stride = 1</code> : 한 칸씩 이동</li>
+        <li><code>stride = 2</code> : 두 칸씩 이동</li>
+      </ul>
+      <p>
+        스트라이드가 커질수록 출력 크기는 작아지고 계산량도 줄지만,
+        세부 정보가 더 빨리 줄어들 수 있습니다.
+      </p>
+
+      <h3>6-2. 패딩(Padding)</h3>
+      <p>
+        입력 가장자리에 0 같은 값을 덧붙이는 것입니다.
+      </p>
+      <ul>
+        <li><code>valid</code> : 패딩 없이 계산</li>
+        <li><code>same</code> : 출력 크기를 어느 정도 유지하도록 패딩 적용</li>
+      </ul>
+      <p>
+        패딩을 사용하는 이유는 가장자리 정보가 너무 빨리 사라지는 것을 막고,
+        출력 크기를 조절하기 위해서입니다.
+      </p>
+      <div class="warn">
+        패딩이 없으면 합성곱을 반복할수록 이미지 크기가 빠르게 줄어듭니다.
+        그러면 중요한 경계 정보가 손실될 수 있습니다.
+      </div>
+    </section>
+
+    <section class="section" id="s7">
+      <h2>7. 활성화 함수와 비선형성</h2>
+      <p>
+        합성곱 뒤에는 보통 <strong>활성화 함수</strong>가 붙습니다.
+        가장 대표적인 것이 <code>ReLU</code>입니다.
+      </p>
+      <div class="formula">
+        ReLU(x) = max(0, x)
+      </div>
+      <p>
+        활성화 함수를 쓰는 이유는 모델에 <strong>비선형성</strong>을 주기 위해서입니다.
+        만약 선형 연산만 반복하면 깊은 신경망이라도 표현력이 제한됩니다.
+      </p>
+      <div class="card">
+        <strong>쉽게 말하면</strong><br>
+        합성곱은 특징을 뽑고, 활성화 함수는 그 특징을 더 유연하게 조합할 수 있게 만듭니다.
+      </div>
+    </section>
+
+    <section class="section" id="s8">
+      <h2>8. Pooling의 종류</h2>
+      <p>
+        Pooling은 특성맵의 크기를 줄이면서 중요한 정보를 요약하는 연산입니다.
+      </p>
+
+      <h3>8-1. Max Pooling</h3>
+      <p>
+        작은 영역 안에서 <strong>가장 큰 값</strong>만 남깁니다.
+      </p>
+      <div class="card">
+        강하게 반응한 특징이 있다면 그 특징을 대표값으로 보존하는 방식입니다.
+      </div>
+
+      <h3>8-2. Average Pooling</h3>
+      <p>
+        작은 영역 안의 값들의 <strong>평균</strong>을 사용합니다.
+      </p>
+      <div class="card">
+        전체적인 경향을 부드럽게 요약하는 데 유리합니다.
+      </div>
+
+      <h3>8-3. Global Average Pooling</h3>
+      <p>
+        특성맵 전체를 채널별로 평균내어, 채널마다 하나의 값만 남기는 방식입니다.
+      </p>
+      <div class="card">
+        마지막 분류 직전에 자주 사용되며, 파라미터 수를 줄이고 과적합을 완화하는 데 도움을 줍니다.
+      </div>
+
+      <h3>8-4. Global Max Pooling</h3>
+      <p>
+        채널별 전체 영역에서 가장 큰 값 하나만 남깁니다.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Pooling 종류</th>
+            <th>대표 방식</th>
+            <th>특징</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Max Pooling</td>
+            <td>최댓값 선택</td>
+            <td>강한 특징 강조</td>
+          </tr>
+          <tr>
+            <td>Average Pooling</td>
+            <td>평균값 사용</td>
+            <td>전체 경향 반영</td>
+          </tr>
+          <tr>
+            <td>Global Average Pooling</td>
+            <td>채널 전체 평균</td>
+            <td>분류 직전 차원 축소에 자주 사용</td>
+          </tr>
+          <tr>
+            <td>Global Max Pooling</td>
+            <td>채널 전체 최댓값</td>
+            <td>가장 강한 반응만 남김</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="section" id="s9">
+      <h2>9. Pooling을 하는 이유</h2>
+
+      <h3>9-1. 특성맵 크기를 줄이기 위해</h3>
+      <p>
+        합성곱을 여러 번 적용하면 특성맵이 많아지고 계산량이 커집니다.
+        Pooling은 크기를 줄여 계산 효율을 높입니다.
+      </p>
+
+      <h3>9-2. 중요한 정보만 남기기 위해</h3>
+      <p>
+        모든 픽셀이 똑같이 중요한 것은 아닙니다.
+        Max Pooling은 특히 “강하게 반응한 특징”을 남기는 데 유용합니다.
+      </p>
+
+      <h3>9-3. 작은 위치 변화에 덜 민감하게 만들기 위해</h3>
+      <p>
+        물체가 이미지 안에서 약간 이동하더라도 같은 물체로 인식해야 합니다.
+        Pooling은 위치 정보의 세밀함을 조금 줄이는 대신,
+        <strong>약간의 이동이나 변형에 더 강한 표현</strong>을 만들어줍니다.
+      </p>
+
+      <h3>9-4. 과적합을 완화하기 위해</h3>
+      <p>
+        차원이 줄어들면 모델이 지나치게 복잡해지는 것을 어느 정도 막을 수 있습니다.
+      </p>
+
+      <div class="note">
+        다만 최근 모델들 중에는 Pooling을 줄이고
+        <strong>stride가 있는 convolution</strong>으로 대체하는 경우도 있습니다.
+        즉, Pooling은 매우 중요하지만 절대적으로 항상 필요한 것은 아닙니다.
+      </div>
+    </section>
+
+    <section class="section" id="s10">
+      <h2>10. CNN의 전체 흐름</h2>
+      <pre>
+입력 이미지
+→ Convolution
+→ Activation(ReLU)
+→ Pooling
+→ Convolution
+→ Activation(ReLU)
+→ Pooling
+→ ...
+→ Flatten 또는 Global Average Pooling
+→ Dense Layer
+→ Output Layer
+      </pre>
+
+      <h3>10-1. Flatten이란?</h3>
+      <p>
+        2차원 또는 3차원 특성맵을 1차원 벡터로 펼치는 과정입니다.
+        이후 Dense layer에 연결할 수 있게 됩니다.
+      </p>
+
+      <h3>10-2. 출력층은 문제에 따라 달라진다</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>문제 유형</th>
+            <th>출력층 예시</th>
+            <th>활성화 함수</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>이진 분류</td>
+            <td>뉴런 1개</td>
+            <td>Sigmoid</td>
+          </tr>
+          <tr>
+            <td>다중 분류</td>
+            <td>클래스 수만큼 뉴런</td>
+            <td>Softmax</td>
+          </tr>
+          <tr>
+            <td>회귀</td>
+            <td>예측값 수만큼 뉴런</td>
+            <td>선형 또는 상황에 맞는 함수</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="section" id="s11">
+      <h2>11. 간단한 예시 코드</h2>
+      <p>아래는 Keras 스타일의 매우 기본적인 CNN 예시입니다.</p>
+      <pre>
+from tensorflow.keras import Sequential
+from tensorflow.keras.layers import Input, Conv2D, MaxPool2D
+from tensorflow.keras.layers import Flatten, Dense
+
+model = Sequential([
+    Input(shape=(28, 28, 1)),
+    Conv2D(32, (3, 3), padding='same', activation='relu'),
+    MaxPool2D((2, 2)),
+    Conv2D(64, (3, 3), padding='same', activation='relu'),
+    MaxPool2D((2, 2)),
+    Flatten(),
+    Dense(128, activation='relu'),
+    Dense(10, activation='softmax')
+])
+      </pre>
+
+      <h3>코드 해석</h3>
+      <ul>
+        <li><code>Conv2D(32, (3,3))</code> : 3×3 필터 32개로 특징 추출</li>
+        <li><code>MaxPool2D((2,2))</code> : 특성맵 크기 축소</li>
+        <li><code>Flatten()</code> : 특성맵을 1차원으로 변환</li>
+        <li><code>Dense(10, activation='softmax')</code> : 10개 클래스 분류</li>
+      </ul>
+    </section>
+
+    <section class="section" id="s12">
+      <h2>12. 자주 헷갈리는 질문 정리</h2>
+
+      <h3>Q1. 필터 크기는 왜 3×3을 많이 쓰나요?</h3>
+      <p>
+        3×3은 작은 영역을 보면서도 충분한 패턴을 잡을 수 있고,
+        파라미터 수와 표현력의 균형이 좋아서 자주 사용됩니다.
+      </p>
+
+      <h3>Q2. Pooling을 꼭 해야 하나요?</h3>
+      <p>
+        전통적인 CNN에서는 매우 자주 사용되지만,
+        최근에는 stride convolution이나 다른 구조로 대체되기도 합니다.
+      </p>
+
+      <h3>Q3. 합성곱은 사람이 직접 규칙을 넣는 건가요?</h3>
+      <p>
+        아닙니다. 필터의 초기값은 보통 무작위로 시작하고,
+        학습 과정에서 손실함수를 줄이는 방향으로 자동 조정됩니다.
+      </p>
+
+      <h3>Q4. CNN은 이미지에만 쓰이나요?</h3>
+      <p>
+        주로 이미지에서 유명하지만, 시계열 데이터나 음성 신호처럼
+        <strong>국소 패턴</strong>이 중요한 데이터에도 사용할 수 있습니다.
+      </p>
+    </section>
+
+    <section class="section" id="s13">
+      <h2>13. 요약</h2>
+      <div class="grid">
+        <div class="card">
+          <strong>합성곱 연산을 하는 이유</strong>
+          <ul>
+            <li>지역적 특징을 잘 잡기 위해</li>
+            <li>파라미터 수를 줄이기 위해</li>
+            <li>같은 패턴을 여러 위치에서 재사용하기 위해</li>
+            <li>계층적으로 특징을 학습하기 위해</li>
+          </ul>
+        </div>
+        <div class="card">
+          <strong>Pooling의 종류</strong>
+          <ul>
+            <li>Max Pooling</li>
+            <li>Average Pooling</li>
+            <li>Global Average Pooling</li>
+            <li>Global Max Pooling</li>
+          </ul>
+        </div>
+        <div class="card">
+          <strong>Pooling을 하는 이유</strong>
+          <ul>
+            <li>특성맵 크기 축소</li>
+            <li>계산량 감소</li>
+            <li>중요한 정보 요약</li>
+            <li>작은 위치 변화에 덜 민감</li>
+            <li>과적합 완화에 도움</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <p class="mini">
+        한 문장으로 정리하면, <strong>CNN은 이미지의 공간 구조를 살리면서 중요한 특징을 효율적으로 추출하는 신경망</strong>입니다.
+      </p>
+    </section>
+
+    <div class="footer">
+      합성곱 신경망(CNN) HTML 강의안 · 1열 단일 레이아웃
+    </div>
+  </div>
+</body>
+</html>

@@ -12,3 +12,4 @@ models/
 utils/
 *.pkl
 *.keras
+.*env
